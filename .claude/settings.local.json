@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git clone:*)",
+      "Bash(./install.sh)",
+      "Bash(pipx install:*)",
+      "Bash(pipx upgrade:*)",
+      "Bash(SuperClaude install)",
+      "Bash(./gradlew:*)",
+      "Bash(curl:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
