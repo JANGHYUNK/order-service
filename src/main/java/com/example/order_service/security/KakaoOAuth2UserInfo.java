@@ -28,7 +28,15 @@ public class KakaoOAuth2UserInfo extends OAuth2UserInfo {
         if (kakaoAccount == null) {
             return null;
         }
-        return (String) kakaoAccount.get("email");
+
+        Boolean emailValid = (Boolean) kakaoAccount.get("email_valid");
+        Boolean isEmailVerified = (Boolean) kakaoAccount.get("is_email_verified");
+
+        if (emailValid != null && emailValid && isEmailVerified != null && isEmailVerified) {
+            return (String) kakaoAccount.get("email");
+        }
+
+        return null;
     }
 
     @Override
@@ -37,6 +45,12 @@ public class KakaoOAuth2UserInfo extends OAuth2UserInfo {
         if (properties == null) {
             return null;
         }
-        return (String) properties.get("profile_image");
+
+        String profileImage = (String) properties.get("profile_image");
+        if (profileImage == null) {
+            profileImage = (String) properties.get("thumbnail_image");
+        }
+
+        return profileImage;
     }
 }

@@ -39,11 +39,17 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 oAuth2User.getAttributes()
         );
 
-        if (!StringUtils.hasText(oAuth2UserInfo.getEmail())) {
-            throw new RuntimeException("Email not found from OAuth2 provider");
+        String email = oAuth2UserInfo.getEmail();
+        if (!StringUtils.hasText(email)) {
+            if ("kakao".equals(oAuth2UserRequest.getClientRegistration().getRegistrationId())) {
+                email = oAuth2UserInfo.getId() + "@kakao.local";
+                log.warn("Email not provided by Kakao, using generated email: {}", email);
+            } else {
+                throw new RuntimeException("Email not found from OAuth2 provider");
+            }
         }
 
-        Optional<User> userOptional = userRepository.findByEmail(oAuth2UserInfo.getEmail());
+        Optional<User> userOptional = userRepository.findByEmail(email);
         User user;
 
         if (userOptional.isPresent()) {
@@ -56,16 +62,16 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             }
             user = updateExistingUser(user, oAuth2UserInfo);
         } else {
-            user = registerNewUser(oAuth2UserRequest, oAuth2UserInfo);
+            user = registerNewUser(oAuth2UserRequest, oAuth2UserInfo, email);
         }
 
         return CustomUserDetailsService.UserPrincipal.create(user, oAuth2User.getAttributes());
     }
 
-    private User registerNewUser(OAuth2UserRequest oAuth2UserRequest, OAuth2UserInfo oAuth2UserInfo) {
+    private User registerNewUser(OAuth2UserRequest oAuth2UserRequest, OAuth2UserInfo oAuth2UserInfo, String email) {
         User user = User.builder()
                 .name(oAuth2UserInfo.getName())
-                .email(oAuth2UserInfo.getEmail())
+                .email(email)
                 .profileImage(oAuth2UserInfo.getImageUrl())
                 .authProvider(User.AuthProvider.valueOf(
                         oAuth2UserRequest.getClientRegistration().getRegistrationId().toUpperCase()))
