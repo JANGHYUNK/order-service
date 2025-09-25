@@ -28,11 +28,17 @@ public class JwtTokenProvider {
     }
 
     public String generateAccessToken(Authentication authentication) {
-        UserDetails userPrincipal = (UserDetails) authentication.getPrincipal();
+        String username;
+        if (authentication.getPrincipal() instanceof UserDetails) {
+            UserDetails userPrincipal = (UserDetails) authentication.getPrincipal();
+            username = userPrincipal.getUsername();
+        } else {
+            username = authentication.getName();
+        }
         Date expiryDate = new Date(System.currentTimeMillis() + jwtExpiration);
 
         return Jwts.builder()
-                .subject(userPrincipal.getUsername())
+                .subject(username)
                 .issuedAt(new Date())
                 .expiration(expiryDate)
                 .signWith(key)

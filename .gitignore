@@ -35,3 +35,10 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# application.properties 무시
+/src/main/resources/application.properties
+
+# .env 파일 무시 (환경변수 관리용)
+.env
+
