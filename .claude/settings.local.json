@@ -9,7 +9,8 @@
       "Bash(./gradlew:*)",
       "Bash(curl:*)",
       "Bash(lsof:*)",
-      "Bash(kill:*)"
+      "Bash(kill:*)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []

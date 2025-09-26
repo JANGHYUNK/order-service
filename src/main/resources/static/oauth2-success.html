@@ -1,95 +1,37 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OAuth2 로그인 성공</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        .success-container {
-            background: white;
-            border-radius: 15px;
-            padding: 40px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            text-align: center;
-            max-width: 400px;
-            width: 100%;
-        }
-        .success-icon {
-            font-size: 4em;
-            color: #28a745;
-            margin-bottom: 20px;
-        }
-        .success-container h1 {
-            color: #333;
-            margin-bottom: 15px;
-        }
-        .success-container p {
-            color: #666;
-            margin-bottom: 30px;
-        }
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 10px;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
+    <title>OAuth2 Login Success</title>
 </head>
 <body>
-    <div class="success-container">
-        <div class="success-icon">✅</div>
-        <h1>로그인 성공!</h1>
-        <p id="message">
-            <span class="loading"></span>
-            토큰을 처리하고 있습니다...
-        </p>
-    </div>
-
+    <p>Login successful. Redirecting...</p>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const token = urlParams.get('token');
-            const messageElement = document.getElementById('message');
+        console.log('OAuth2 Success page loaded');
+        console.log('Current URL:', window.location.href);
 
-            if (token) {
-                // JWT 토큰을 localStorage에 저장
-                localStorage.setItem('accessToken', token);
+        // URL에서 'token' 파라미터 값을 추출합니다.
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
 
-                messageElement.innerHTML = '로그인 완료! 홈페이지로 이동합니다...';
+        console.log('Token from URL:', token);
+        console.log('All URL params:', Array.from(urlParams.entries()));
 
-                // 2초 후 홈페이지로 리다이렉트
-                setTimeout(() => {
-                    window.location.href = '/';
-                }, 2000);
-            } else {
-                messageElement.innerHTML = '토큰을 찾을 수 없습니다. 다시 로그인해주세요.';
-                setTimeout(() => {
-                    window.location.href = '/login.html';
-                }, 3000);
-            }
-        });
+        if (token) {
+            console.log('Token found, saving to localStorage');
+            // 토큰을 localStorage에 저장합니다. 프론트엔드에서는 이 토큰을 API 요청 시 사용합니다.
+            localStorage.setItem('accessToken', token);
+            console.log('Token saved, redirecting to dashboard');
+
+            // 대시보드나 성공 페이지로 리다이렉트 (메인 페이지 대신)
+            alert('로그인 성공! 토큰이 저장되었습니다.');
+            window.location.href = '/dashboard.html'; // 대시보드가 없다면 메인 페이지로
+        } else {
+            console.log('No token found in URL');
+            // 토큰이 없는 경우, 에러 메시지를 표시하고 로그인 페이지로 보냅니다.
+            alert('Authentication failed. No token provided. URL: ' + window.location.href);
+            window.location.href = '/';
+        }
     </script>
 </body>
 </html>

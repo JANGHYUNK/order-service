@@ -62,31 +62,13 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             }
             user = updateExistingUser(user, oAuth2UserInfo);
         } else {
-            // 신규 사용자: 회원가입이 필요한 상태로 DB에 저장
-            user = createPendingUser(oAuth2UserRequest, oAuth2UserInfo, email);
+            // 신규 사용자: 즉시 활성화된 상태로 회원가입 완료
+            user = registerNewUser(oAuth2UserRequest, oAuth2UserInfo, email);
         }
 
         return CustomUserDetailsService.UserPrincipal.create(user, oAuth2User.getAttributes());
     }
 
-    private User createPendingUser(OAuth2UserRequest oAuth2UserRequest, OAuth2UserInfo oAuth2UserInfo, String email) {
-        // 회원가입이 필요한 사용자를 DB에 저장 (isEnabled=false로 설정)
-        User user = User.builder()
-                .name(oAuth2UserInfo.getName())
-                .email(email)
-                .profileImage(oAuth2UserInfo.getImageUrl())
-                .authProvider(User.AuthProvider.valueOf(
-                        oAuth2UserRequest.getClientRegistration().getRegistrationId().toUpperCase()))
-                .providerId(oAuth2UserInfo.getId())
-                .role(User.Role.USER)
-                .isEnabled(false) // 회원가입 미완료 상태
-                .build();
-
-        log.info("Creating pending user for OAuth2 signup: email={}, provider={}",
-                email, oAuth2UserRequest.getClientRegistration().getRegistrationId());
-
-        return userRepository.save(user);
-    }
 
     private User registerNewUser(OAuth2UserRequest oAuth2UserRequest, OAuth2UserInfo oAuth2UserInfo, String email) {
         User user = User.builder()
@@ -97,8 +79,11 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                         oAuth2UserRequest.getClientRegistration().getRegistrationId().toUpperCase()))
                 .providerId(oAuth2UserInfo.getId())
                 .role(User.Role.USER)
-                .isEnabled(true)
+                .isEnabled(true) // 즉시 활성화
                 .build();
+
+        log.info("Registering new OAuth2 user: email={}, provider={}",
+                email, oAuth2UserRequest.getClientRegistration().getRegistrationId());
 
         return userRepository.save(user);
     }
