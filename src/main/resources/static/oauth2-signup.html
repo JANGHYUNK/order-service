@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAuth2 회원가입 완료</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .signup-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .profile-section {
+            margin-bottom: 30px;
+        }
+
+        .profile-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: block;
+            border: 4px solid #667eea;
+        }
+
+        .welcome-text {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .provider-info {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .user-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 5px 0;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .info-value {
+            color: #333;
+        }
+
+        .complete-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            width: 100%;
+        }
+
+        .complete-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .complete-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .success-message {
+            display: none;
+            color: #28a745;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+
+        .error-message {
+            display: none;
+            color: #dc3545;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <div class="profile-section">
+            <img id="profileImage" src="" alt="Profile" class="profile-image" style="display: none;">
+            <h2 class="welcome-text">회원가입을 완료해주세요</h2>
+            <p class="provider-info">다음 정보로 가입하시겠습니까?</p>
+        </div>
+
+        <div class="user-info">
+            <div class="info-item">
+                <span class="info-label">이름:</span>
+                <span class="info-value" id="userName"></span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">이메일:</span>
+                <span class="info-value" id="userEmail"></span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">로그인 방식:</span>
+                <span class="info-value" id="authProvider"></span>
+            </div>
+        </div>
+
+        <button id="completeSignup" class="complete-btn">
+            회원가입 완료
+        </button>
+
+        <div class="loading">
+            <p>처리 중...</p>
+        </div>
+
+        <div class="success-message">
+            <p>회원가입이 완료되었습니다! 로그인 페이지로 이동합니다.</p>
+        </div>
+
+        <div class="error-message">
+            <p>회원가입 처리 중 오류가 발생했습니다. 다시 시도해주세요.</p>
+        </div>
+    </div>
+
+    <script>
+        // URL에서 파라미터 추출
+        const urlParams = new URLSearchParams(window.location.search);
+        const email = urlParams.get('email');
+        const name = urlParams.get('name');
+        const provider = urlParams.get('provider');
+        const providerId = urlParams.get('providerId');
+        const profileImage = urlParams.get('profileImage');
+
+        // 사용자 정보 표시
+        document.getElementById('userName').textContent = name || '정보 없음';
+        document.getElementById('userEmail').textContent = email || '정보 없음';
+        document.getElementById('authProvider').textContent = provider || '정보 없음';
+
+        // 프로필 이미지 표시
+        if (profileImage && profileImage !== 'null') {
+            const profileImg = document.getElementById('profileImage');
+            profileImg.src = profileImage;
+            profileImg.style.display = 'block';
+        }
+
+        // 회원가입 완료 버튼 클릭 이벤트
+        document.getElementById('completeSignup').addEventListener('click', async function() {
+            const button = this;
+            const loading = document.querySelector('.loading');
+            const successMessage = document.querySelector('.success-message');
+            const errorMessage = document.querySelector('.error-message');
+
+            // 버튼 비활성화 및 로딩 표시
+            button.disabled = true;
+            loading.style.display = 'block';
+            successMessage.style.display = 'none';
+            errorMessage.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/auth/oauth2/complete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        name: name,
+                        provider: provider,
+                        providerId: providerId,
+                        profileImage: profileImage
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // 성공 시
+                    loading.style.display = 'none';
+                    successMessage.style.display = 'block';
+
+                    // JWT 토큰을 로컬 스토리지에 저장 (선택사항)
+                    if (data.accessToken) {
+                        localStorage.setItem('accessToken', data.accessToken);
+                    }
+
+                    // 2초 후 메인 페이지로 이동
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                } else {
+                    throw new Error(data.error || '회원가입에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('Signup error:', error);
+                loading.style.display = 'none';
+                errorMessage.style.display = 'block';
+                button.disabled = false;
+            }
+        });
+
+        // 필요한 정보가 없으면 메인 페이지로 리다이렉트
+        if (!email || !name || !provider) {
+            alert('잘못된 접근입니다. 메인 페이지로 이동합니다.');
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>

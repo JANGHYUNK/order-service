@@ -2,6 +2,7 @@ package com.example.order_service.controller;
 
 import com.example.order_service.dto.AuthResponse;
 import com.example.order_service.dto.LoginRequest;
+import com.example.order_service.dto.OAuth2SignupRequest;
 import com.example.order_service.dto.SignUpRequest;
 import com.example.order_service.service.AuthService;
 import jakarta.validation.Valid;
@@ -56,5 +57,15 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<String> getCurrentUser() {
         return ResponseEntity.ok("현재 인증된 사용자 정보를 반환합니다.");
+    }
+
+    @PostMapping("/oauth2/complete")
+    public ResponseEntity<AuthResponse> completeOAuth2Signup(@Valid @RequestBody OAuth2SignupRequest oauth2SignupRequest) {
+        try {
+            AuthResponse response = authService.completeOAuth2Signup(oauth2SignupRequest);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 }

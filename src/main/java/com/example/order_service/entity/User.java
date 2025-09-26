@@ -64,6 +64,6 @@ public class User {
     }
 
     public enum AuthProvider {
-        LOCAL, GOOGLE, KAKAO
+        LOCAL, GOOGLE, KAKAO, NAVER
     }
 }

@@ -16,17 +16,20 @@ import java.io.IOException;
 @Slf4j
 public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
 
-    @Value("${app.oauth2.authorizedRedirectUris:http://localhost:3000/auth/callback}")
+    @Value("${app.oauth2.authorizedRedirectUris:http://localhost:8080/oauth2-success.html}")
     private String redirectUri;
 
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
                                        AuthenticationException exception) throws IOException, ServletException {
 
+        log.error("OAuth2 authentication failed: {}", exception.getMessage());
+
         String targetUrl = UriComponentsBuilder.fromUriString(redirectUri)
                 .queryParam("error", exception.getLocalizedMessage())
                 .build().toUriString();
 
+        log.info("Redirecting to failure page: {}", targetUrl);
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }
 }

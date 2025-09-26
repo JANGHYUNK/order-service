@@ -41,12 +41,14 @@ public class CustomUserDetailsService implements UserDetailsService {
         private String password;
         private Collection<? extends GrantedAuthority> authorities;
         private Map<String, Object> attributes;
+        private User user; // User 엔티티 추가
 
-        public UserPrincipal(Long id, String email, String password, Collection<? extends GrantedAuthority> authorities) {
+        public UserPrincipal(Long id, String email, String password, Collection<? extends GrantedAuthority> authorities, User user) {
             this.id = id;
             this.email = email;
             this.password = password;
             this.authorities = authorities;
+            this.user = user;
         }
 
         public static UserPrincipal create(User user) {
@@ -58,7 +60,8 @@ public class CustomUserDetailsService implements UserDetailsService {
                     user.getId(),
                     user.getEmail(),
                     user.getPassword(),
-                    authorities
+                    authorities,
+                    user
             );
         }
 
@@ -74,6 +77,14 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         public Long getId() {
             return id;
+        }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public User getUser() {
+            return user;
         }
 
         @Override

@@ -2,6 +2,7 @@ package com.example.order_service.service;
 
 import com.example.order_service.dto.AuthResponse;
 import com.example.order_service.dto.LoginRequest;
+import com.example.order_service.dto.OAuth2SignupRequest;
 import com.example.order_service.dto.SignUpRequest;
 import com.example.order_service.entity.User;
 import com.example.order_service.repository.UserRepository;
@@ -112,6 +113,50 @@ public class AuthService {
                         .name(user.getName())
                         .profileImage(user.getProfileImage())
                         .role(user.getRole().name())
+                        .build())
+                .build();
+    }
+
+    public AuthResponse completeOAuth2Signup(OAuth2SignupRequest oauth2SignupRequest) {
+        // OAuth2로 생성된 미완료 사용자를 찾음
+        User user = userRepository.findByEmail(oauth2SignupRequest.getEmail())
+                .orElseThrow(() -> new RuntimeException("OAuth2 사용자를 찾을 수 없습니다."));
+
+        // 이미 완료된 사용자인지 확인
+        if (user.getIsEnabled()) {
+            throw new RuntimeException("이미 회원가입이 완료된 사용자입니다.");
+        }
+
+        // OAuth2 사용자가 아닌 경우 체크
+        if (user.getAuthProvider() == User.AuthProvider.LOCAL) {
+            throw new RuntimeException("일반 회원가입 사용자입니다.");
+        }
+
+        // 사용자 정보 업데이트
+        user.setName(oauth2SignupRequest.getName());
+        user.setProfileImage(oauth2SignupRequest.getProfileImage());
+        user.setIsEnabled(true); // 회원가입 완료
+
+        log.info("Completing OAuth2 signup for user: email={}, provider={}",
+                user.getEmail(), user.getAuthProvider());
+
+        User savedUser = userRepository.save(user);
+
+        // JWT 토큰 생성
+        String accessToken = jwtTokenProvider.generateAccessToken(savedUser.getEmail());
+        String refreshToken = jwtTokenProvider.generateRefreshToken(savedUser.getEmail());
+
+        return AuthResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .tokenType("Bearer")
+                .expiresIn(86400L)
+                .user(AuthResponse.UserInfo.builder()
+                        .id(savedUser.getId())
+                        .email(savedUser.getEmail())
+                        .name(savedUser.getName())
+                        .profileImage(savedUser.getProfileImage())
+                        .role(savedUser.getRole().name())
                         .build())
                 .build();
     }

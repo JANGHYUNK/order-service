@@ -7,7 +7,9 @@
       "Bash(pipx upgrade:*)",
       "Bash(SuperClaude install)",
       "Bash(./gradlew:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(lsof:*)",
+      "Bash(kill:*)"
     ],
     "deny": [],
     "ask": []

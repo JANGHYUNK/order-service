@@ -19,9 +19,9 @@ public class JwtTokenProvider {
     private final int jwtExpiration;
     private final int refreshExpiration;
 
-    public JwtTokenProvider(@Value("${jwt.secret}") String jwtSecret,
-                            @Value("${jwt.expiration}") int jwtExpiration,
-                            @Value("${jwt.refresh-expiration}") int refreshExpiration) {
+    public JwtTokenProvider(@Value("${app.auth.tokenSecret}") String jwtSecret,
+                            @Value("${app.auth.tokenExpirationMsec}") int jwtExpiration,
+                            @Value("${app.auth.tokenExpirationMsec}") int refreshExpiration) {
         this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
         this.jwtExpiration = jwtExpiration;
         this.refreshExpiration = refreshExpiration;

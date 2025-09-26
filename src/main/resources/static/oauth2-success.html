@@ -77,11 +77,11 @@
                 // JWT 토큰을 localStorage에 저장
                 localStorage.setItem('accessToken', token);
 
-                messageElement.innerHTML = '로그인 완료! 대시보드로 이동합니다...';
+                messageElement.innerHTML = '로그인 완료! 홈페이지로 이동합니다...';
 
-                // 2초 후 대시보드로 리다이렉트
+                // 2초 후 홈페이지로 리다이렉트
                 setTimeout(() => {
-                    window.location.href = '/dashboard.html';
+                    window.location.href = '/';
                 }, 2000);
             } else {
                 messageElement.innerHTML = '토큰을 찾을 수 없습니다. 다시 로그인해주세요.';
