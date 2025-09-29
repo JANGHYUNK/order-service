@@ -21,9 +21,9 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
 
         return UserPrincipal.create(user);
     }
@@ -38,14 +38,16 @@ public class CustomUserDetailsService implements UserDetailsService {
     public static class UserPrincipal implements UserDetails, org.springframework.security.oauth2.core.user.OAuth2User {
         private Long id;
         private String email;
+        private String username;
         private String password;
         private Collection<? extends GrantedAuthority> authorities;
         private Map<String, Object> attributes;
         private User user; // User 엔티티 추가
 
-        public UserPrincipal(Long id, String email, String password, Collection<? extends GrantedAuthority> authorities, User user) {
+        public UserPrincipal(Long id, String email, String username, String password, Collection<? extends GrantedAuthority> authorities, User user) {
             this.id = id;
             this.email = email;
+            this.username = username;
             this.password = password;
             this.authorities = authorities;
             this.user = user;
@@ -59,6 +61,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             return new UserPrincipal(
                     user.getId(),
                     user.getEmail(),
+                    user.getUsername(),
                     user.getPassword(),
                     authorities,
                     user
@@ -89,7 +92,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         @Override
         public String getUsername() {
-            return email;
+            return username;
         }
 
         @Override

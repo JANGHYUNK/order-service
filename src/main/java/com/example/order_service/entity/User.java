@@ -27,6 +27,9 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
+    @Column(unique = true, nullable = true)
+    private String username;
+
     @Column(nullable = true)
     private String password;
 
@@ -50,6 +53,13 @@ public class User {
     @Column(name = "is_enabled", nullable = false)
     @Builder.Default
     private Boolean isEnabled = true;
+
+    @Column(name = "email_verified", nullable = false)
+    @Builder.Default
+    private Boolean emailVerified = false;
+
+    @Column(name = "email_verified_at")
+    private LocalDateTime emailVerifiedAt;
 
     @CreatedDate
     @Column(name = "created_at", updatable = false)

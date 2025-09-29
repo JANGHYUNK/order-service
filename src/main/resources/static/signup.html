@@ -25,7 +25,7 @@
             padding: 40px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
             width: 100%;
-            max-width: 400px;
+            max-width: 480px;
         }
         .header {
             text-align: center;
@@ -106,8 +106,17 @@
             justify-content: center;
             gap: 8px;
         }
+        .btn-naver {
+            background: #03c75a;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
         .btn-google:hover,
-        .btn-kakao:hover {
+        .btn-kakao:hover,
+        .btn-naver:hover {
             transform: translateY(-1px);
             box-shadow: 0 3px 10px rgba(0,0,0,0.15);
         }
@@ -166,6 +175,102 @@
             margin-bottom: 20px;
             display: none;
         }
+        .verification-message {
+            background: #fff3cd;
+            color: #856404;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            border: 1px solid #ffeaa7;
+        }
+        .verification-message h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+        .verification-message p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .resend-btn {
+            background: #ffc107;
+            color: #212529;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+        .resend-btn:hover {
+            background: #e0a800;
+        }
+        .resend-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .input-group {
+            display: flex;
+            gap: 8px;
+            align-items: stretch;
+        }
+        .input-group input {
+            flex: 1;
+            min-width: 200px;
+        }
+        .input-group .btn {
+            margin-bottom: 0;
+            padding: 8px 10px;
+            white-space: nowrap;
+            width: 70px;
+            font-size: 11px;
+            flex-shrink: 0;
+        }
+        .btn-verify {
+            background: #28a745;
+            color: white;
+        }
+        .btn-verify:hover {
+            background: #218838;
+        }
+        .btn-verify:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .btn-check {
+            background: #17a2b8;
+            color: white;
+        }
+        .btn-check:hover {
+            background: #138496;
+        }
+        .btn-check:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .status-indicator {
+            font-size: 12px;
+            margin-top: 5px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status-loading {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
     </style>
 </head>
 <body>
@@ -177,26 +282,60 @@
 
         <div id="errorMessage" class="error-message"></div>
         <div id="successMessage" class="success-message"></div>
+        <div id="verificationMessage" class="verification-message">
+            <h3>📧 이메일 인증이 필요합니다</h3>
+            <p>회원가입이 완료되었습니다!</p>
+            <p id="verificationEmail"></p>
+            <p>위 이메일 주소로 인증 링크를 발송했습니다. 이메일을 확인하여 계정을 활성화해주세요.</p>
+            <p><small>이메일이 오지 않았다면 스팸함을 확인해주세요.</small></p>
+            <button id="resendBtn" class="resend-btn" onclick="resendVerificationEmail()">인증 이메일 재전송</button>
+        </div>
 
         <form id="signupForm">
             <div class="form-group">
                 <label for="name">이름</label>
-                <input type="text" id="name" name="name" required maxlength="50">
+                <input type="text" id="name" name="name" required maxlength="50" placeholder="실명을 입력해주세요">
             </div>
+
+            <div class="form-group">
+                <label for="username">아이디</label>
+                <div class="input-group">
+                    <input type="text" id="username" name="username" required minlength="4" maxlength="20" placeholder="4-20자 영문, 숫자">
+                    <button type="button" id="checkUsernameBtn" class="btn btn-check">중복확인</button>
+                </div>
+                <div id="usernameStatus" class="status-indicator"></div>
+            </div>
+
             <div class="form-group">
                 <label for="email">이메일</label>
-                <input type="email" id="email" name="email" required>
+                <div class="input-group">
+                    <input type="email" id="email" name="email" required placeholder="example@email.com">
+                    <button type="button" id="sendCodeBtn" class="btn btn-verify">인증전송</button>
+                </div>
+                <div id="emailStatus" class="status-indicator"></div>
             </div>
+
+            <div class="form-group" id="verificationCodeGroup" style="display: none;">
+                <label for="verificationCode">이메일 인증번호</label>
+                <div class="input-group">
+                    <input type="text" id="verificationCode" name="verificationCode" maxlength="6" placeholder="6자리 인증번호">
+                    <button type="button" id="verifyCodeBtn" class="btn btn-verify">확인</button>
+                </div>
+                <div id="verificationStatus" class="status-indicator"></div>
+            </div>
+
             <div class="form-group">
                 <label for="password">비밀번호</label>
-                <input type="password" id="password" name="password" required minlength="8">
+                <input type="password" id="password" name="password" required minlength="8" placeholder="최소 8자 이상">
                 <div class="password-requirements">최소 8자 이상 입력해주세요</div>
             </div>
+
             <div class="form-group">
                 <label for="confirmPassword">비밀번호 확인</label>
-                <input type="password" id="confirmPassword" name="confirmPassword" required>
+                <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="비밀번호를 다시 입력해주세요">
             </div>
-            <button type="submit" class="btn btn-primary">회원가입</button>
+
+            <button type="submit" id="signupBtn" class="btn btn-primary" disabled>회원가입</button>
         </form>
 
         <div class="divider">
@@ -211,6 +350,10 @@
             <span class="social-btn-icon">💬</span>
             <span class="social-btn-text">Kakao로 시작하기</span>
         </a>
+        <a href="/oauth2/authorization/naver" class="btn btn-naver">
+            <span class="social-btn-icon">🟢</span>
+            <span class="social-btn-text">네이버로 시작하기</span>
+        </a>
 
         <div class="links">
             <a href="/login.html">로그인</a>
@@ -219,13 +362,308 @@
     </div>
 
     <script>
-        document.getElementById('signupForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+        // State tracking
+        let validationState = {
+            username: false,
+            email: false,
+            emailVerified: false,
+            password: false,
+            passwordConfirm: false
+        };
 
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
+        let currentEmail = '';
+        let sendCodeCooldown = 0;
+        let verifiedCode = ''; // 검증된 인증번호 저장
+
+        // Initialize event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Username validation
+            document.getElementById('username').addEventListener('input', debounce(validateUsername, 500));
+            document.getElementById('checkUsernameBtn').addEventListener('click', checkUsername);
+
+            // Email validation
+            document.getElementById('email').addEventListener('input', debounce(validateEmail, 500));
+            document.getElementById('sendCodeBtn').addEventListener('click', sendVerificationCode);
+
+            // Verification code
+            document.getElementById('verificationCode').addEventListener('input', debounce(validateVerificationCode, 500));
+            document.getElementById('verifyCodeBtn').addEventListener('click', verifyCode);
+
+            // Password validation
+            document.getElementById('password').addEventListener('input', validatePassword);
+            document.getElementById('confirmPassword').addEventListener('input', validatePasswordConfirm);
+
+            // Form submission
+            document.getElementById('signupForm').addEventListener('submit', handleSignup);
+
+            // Check for URL parameters
+            checkUrlParameters();
+        });
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        async function validateUsername() {
+            const username = document.getElementById('username').value.trim();
+            const status = document.getElementById('usernameStatus');
+
+            if (username.length < 4) {
+                showStatus(status, '아이디는 4자 이상이어야 합니다.', 'error');
+                validationState.username = false;
+                updateSignupButton();
+                return;
+            }
+
+            if (!/^[a-zA-Z0-9]+$/.test(username)) {
+                showStatus(status, '아이디는 영문과 숫자만 사용 가능합니다.', 'error');
+                validationState.username = false;
+                updateSignupButton();
+                return;
+            }
+
+            showStatus(status, '확인 중...', 'loading');
+        }
+
+        async function checkUsername() {
+            const username = document.getElementById('username').value.trim();
+            const status = document.getElementById('usernameStatus');
+            const btn = document.getElementById('checkUsernameBtn');
+
+            if (username.length < 4) {
+                showStatus(status, '아이디는 4자 이상이어야 합니다.', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '확인 중...';
+
+            try {
+                const response = await fetch(`/api/auth/check-username?username=${encodeURIComponent(username)}`);
+                const data = await response.json();
+
+                if (data.available) {
+                    showStatus(status, '사용 가능한 아이디입니다.', 'success');
+                    validationState.username = true;
+                } else {
+                    showStatus(status, data.message, 'error');
+                    validationState.username = false;
+                }
+            } catch (error) {
+                showStatus(status, '확인 중 오류가 발생했습니다.', 'error');
+                validationState.username = false;
+            }
+
+            btn.disabled = false;
+            btn.textContent = '중복확인';
+            updateSignupButton();
+        }
+
+        function validateEmail() {
+            const email = document.getElementById('email').value.trim();
+            const status = document.getElementById('emailStatus');
+
+            if (!email) {
+                status.style.display = 'none';
+                validationState.email = false;
+                updateSignupButton();
+                return;
+            }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showStatus(status, '올바른 이메일 형식이 아닙니다.', 'error');
+                validationState.email = false;
+            } else {
+                showStatus(status, '올바른 이메일 형식입니다.', 'success');
+                validationState.email = true;
+            }
+
+            updateSignupButton();
+        }
+
+        async function sendVerificationCode() {
+            const email = document.getElementById('email').value.trim();
+            const status = document.getElementById('emailStatus');
+            const btn = document.getElementById('sendCodeBtn');
+
+            if (!validationState.email) {
+                showStatus(status, '올바른 이메일을 입력해주세요.', 'error');
+                return;
+            }
+
+            if (sendCodeCooldown > 0) {
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '전송 중...';
+            showStatus(status, '인증번호 전송 중...', 'loading');
+
+            try {
+                const response = await fetch('/api/auth/send-verification-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    currentEmail = email;
+                    showStatus(status, '인증번호가 발송되었습니다.', 'success');
+                    document.getElementById('verificationCodeGroup').style.display = 'block';
+                    document.getElementById('email').disabled = true;
+
+                    // Start cooldown
+                    startSendCodeCooldown();
+                } else {
+                    showStatus(status, data.message, 'error');
+                }
+            } catch (error) {
+                showStatus(status, '전송 중 오류가 발생했습니다.', 'error');
+            }
+
+            btn.disabled = false;
+            btn.textContent = '인증전송';
+        }
+
+        function startSendCodeCooldown() {
+            sendCodeCooldown = 300; // 5 minutes
+            const btn = document.getElementById('sendCodeBtn');
+
+            const timer = setInterval(() => {
+                const minutes = Math.floor(sendCodeCooldown / 60);
+                const seconds = sendCodeCooldown % 60;
+                btn.textContent = `재전송 (${minutes}:${seconds.toString().padStart(2, '0')})`;
+                btn.disabled = true;
+
+                sendCodeCooldown--;
+
+                if (sendCodeCooldown < 0) {
+                    clearInterval(timer);
+                    btn.textContent = '인증전송';
+                    btn.disabled = false;
+                }
+            }, 1000);
+        }
+
+        function validateVerificationCode() {
+            const code = document.getElementById('verificationCode').value.trim();
+            const status = document.getElementById('verificationStatus');
+
+            if (code.length !== 6 || !/^\d{6}$/.test(code)) {
+                showStatus(status, '6자리 숫자를 입력해주세요.', 'error');
+                validationState.emailVerified = false;
+                updateSignupButton();
+                return;
+            }
+
+            status.style.display = 'none';
+        }
+
+        async function verifyCode() {
+            const code = document.getElementById('verificationCode').value.trim();
+            const status = document.getElementById('verificationStatus');
+            const btn = document.getElementById('verifyCodeBtn');
+
+            if (code.length !== 6 || !/^\d{6}$/.test(code)) {
+                showStatus(status, '6자리 숫자를 입력해주세요.', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '확인 중...';
+            showStatus(status, '인증번호 확인 중...', 'loading');
+
+            try {
+                const response = await fetch('/api/auth/verify-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: currentEmail,
+                        code: code
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.verified) {
+                    showStatus(status, '이메일 인증이 완료되었습니다.', 'success');
+                    validationState.emailVerified = true;
+                    verifiedCode = code; // 검증된 코드 저장
+                    document.getElementById('verificationCode').disabled = true;
+                    btn.style.display = 'none';
+                } else {
+                    showStatus(status, data.message, 'error');
+                    validationState.emailVerified = false;
+                    verifiedCode = ''; // 실패 시 초기화
+                }
+            } catch (error) {
+                showStatus(status, '확인 중 오류가 발생했습니다.', 'error');
+                validationState.emailVerified = false;
+            }
+
+            btn.disabled = false;
+            btn.textContent = '확인';
+            updateSignupButton();
+        }
+
+        function validatePassword() {
+            const password = document.getElementById('password').value;
+
+            if (password.length >= 8) {
+                validationState.password = true;
+            } else {
+                validationState.password = false;
+            }
+
+            validatePasswordConfirm();
+            updateSignupButton();
+        }
+
+        function validatePasswordConfirm() {
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (confirmPassword && password === confirmPassword) {
+                validationState.passwordConfirm = true;
+            } else {
+                validationState.passwordConfirm = false;
+            }
+
+            updateSignupButton();
+        }
+
+        function updateSignupButton() {
+            const btn = document.getElementById('signupBtn');
+            const allValid = Object.values(validationState).every(state => state === true);
+
+            btn.disabled = !allValid;
+
+            if (allValid) {
+                btn.textContent = '회원가입';
+                btn.style.backgroundColor = '#667eea';
+            } else {
+                btn.textContent = '모든 항목을 완료해주세요';
+                btn.style.backgroundColor = '#ccc';
+            }
+        }
+
+        async function handleSignup(e) {
+            e.preventDefault();
 
             const errorMessage = document.getElementById('errorMessage');
             const successMessage = document.getElementById('successMessage');
@@ -233,19 +671,13 @@
             errorMessage.style.display = 'none';
             successMessage.style.display = 'none';
 
-            // 비밀번호 확인
-            if (password !== confirmPassword) {
-                errorMessage.textContent = '비밀번호가 일치하지 않습니다.';
-                errorMessage.style.display = 'block';
-                return;
-            }
-
-            // 비밀번호 최소 길이 확인
-            if (password.length < 8) {
-                errorMessage.textContent = '비밀번호는 최소 8자 이상이어야 합니다.';
-                errorMessage.style.display = 'block';
-                return;
-            }
+            const formData = {
+                name: document.getElementById('name').value.trim(),
+                username: document.getElementById('username').value.trim(),
+                email: currentEmail,
+                verificationCode: verifiedCode, // 검증된 코드 사용
+                password: document.getElementById('password').value
+            };
 
             try {
                 const response = await fetch('/api/auth/signup', {
@@ -253,32 +685,28 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        name: name,
-                        email: email,
-                        password: password
-                    })
+                    body: JSON.stringify(formData)
                 });
 
                 if (response.ok) {
                     const data = await response.json();
 
-                    // JWT 토큰을 localStorage에 저장
-                    localStorage.setItem('accessToken', data.accessToken);
-                    localStorage.setItem('refreshToken', data.refreshToken);
+                    if (data.accessToken) {
+                        localStorage.setItem('accessToken', data.accessToken);
+                        localStorage.setItem('refreshToken', data.refreshToken);
+                    }
 
-                    successMessage.textContent = '회원가입 성공! 리다이렉트 중...';
+                    successMessage.textContent = data.message || '회원가입이 완료되었습니다!';
                     successMessage.style.display = 'block';
 
-                    // 성공 후 홈페이지로 리다이렉트
                     setTimeout(() => {
                         window.location.href = '/dashboard.html';
-                    }, 1000);
+                    }, 1500);
                 } else {
-                    const errorData = await response.text();
-                    if (response.status === 400) {
-                        errorMessage.textContent = '입력 정보를 확인해주세요. 이미 존재하는 이메일일 수 있습니다.';
-                    } else {
+                    try {
+                        const data = await response.json();
+                        errorMessage.textContent = data.message || '회원가입에 실패했습니다.';
+                    } catch (e) {
                         errorMessage.textContent = '회원가입에 실패했습니다. 다시 시도해주세요.';
                     }
                     errorMessage.style.display = 'block';
@@ -288,7 +716,23 @@
                 errorMessage.textContent = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
                 errorMessage.style.display = 'block';
             }
-        });
+        }
+
+        function showStatus(element, message, type) {
+            element.textContent = message;
+            element.className = `status-indicator status-${type}`;
+            element.style.display = 'block';
+        }
+
+        function checkUrlParameters() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const error = urlParams.get('error');
+
+            if (error) {
+                document.getElementById('errorMessage').textContent = decodeURIComponent(error);
+                document.getElementById('errorMessage').style.display = 'block';
+            }
+        }
     </script>
 </body>
 </html>

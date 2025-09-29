@@ -80,6 +80,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .providerId(oAuth2UserInfo.getId())
                 .role(User.Role.USER)
                 .isEnabled(true) // 즉시 활성화
+                .emailVerified(true) // OAuth2 users are pre-verified
                 .build();
 
         log.info("Registering new OAuth2 user: email={}, provider={}",

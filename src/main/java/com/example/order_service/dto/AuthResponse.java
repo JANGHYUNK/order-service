@@ -16,6 +16,9 @@ public class AuthResponse {
     private String tokenType = "Bearer";
     private Long expiresIn;
     private UserInfo user;
+    private String message;
+    @Builder.Default
+    private Boolean requiresEmailVerification = false;
 
     @Data
     @NoArgsConstructor
