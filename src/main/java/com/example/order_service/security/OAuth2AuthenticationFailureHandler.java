@@ -3,6 +3,7 @@ package com.example.order_service.security;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.AuthenticationException;
@@ -23,11 +24,14 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
                                        AuthenticationException exception) throws IOException, ServletException {
 
-        log.error("OAuth2 authentication failed: {}", exception.getMessage());
+        log.error("OAuth2 authentication failed: {}", exception.getMessage(), exception);
 
+        // URL 인코딩을 사용하여 에러 메시지 전달
         String targetUrl = UriComponentsBuilder.fromUriString(redirectUri)
                 .queryParam("error", exception.getLocalizedMessage())
-                .build().toUriString();
+                .encode()
+                .build()
+                .toUriString();
 
         log.info("Redirecting to failure page: {}", targetUrl);
         getRedirectStrategy().sendRedirect(request, response, targetUrl);

@@ -34,12 +34,17 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     private OAuth2User processOAuth2User(OAuth2UserRequest oAuth2UserRequest, OAuth2User oAuth2User) {
+        log.info("Processing OAuth2 user from provider: {}", oAuth2UserRequest.getClientRegistration().getRegistrationId());
+        log.debug("OAuth2 user attributes: {}", oAuth2User.getAttributes());
+
         OAuth2UserInfo oAuth2UserInfo = OAuth2UserInfoFactory.getOAuth2UserInfo(
                 oAuth2UserRequest.getClientRegistration().getRegistrationId(),
                 oAuth2User.getAttributes()
         );
 
         String email = oAuth2UserInfo.getEmail();
+        log.info("OAuth2 user email: {}, name: {}, id: {}", email, oAuth2UserInfo.getName(), oAuth2UserInfo.getId());
+
         if (!StringUtils.hasText(email)) {
             if ("kakao".equals(oAuth2UserRequest.getClientRegistration().getRegistrationId())) {
                 email = oAuth2UserInfo.getId() + "@kakao.local";
@@ -54,6 +59,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         if (userOptional.isPresent()) {
             user = userOptional.get();
+            log.info("Existing user found: id={}, email={}, username={}", user.getId(), user.getEmail(), user.getUsername());
+
             if (!user.getAuthProvider().equals(User.AuthProvider.valueOf(
                     oAuth2UserRequest.getClientRegistration().getRegistrationId().toUpperCase()))) {
                 throw new RuntimeException("Looks like you're signed up with " +
@@ -64,9 +71,13 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         } else {
             // 신규 사용자: 즉시 활성화된 상태로 회원가입 완료
             user = registerNewUser(oAuth2UserRequest, oAuth2UserInfo, email);
+            log.info("New user registered: id={}, email={}, username={}", user.getId(), user.getEmail(), user.getUsername());
         }
 
-        return CustomUserDetailsService.UserPrincipal.create(user, oAuth2User.getAttributes());
+        CustomUserDetailsService.UserPrincipal principal = CustomUserDetailsService.UserPrincipal.create(user, oAuth2User.getAttributes());
+        log.info("Created UserPrincipal: name={}, email={}, username={}", principal.getName(), principal.getEmail(), principal.getUsername());
+
+        return principal;
     }
 
 

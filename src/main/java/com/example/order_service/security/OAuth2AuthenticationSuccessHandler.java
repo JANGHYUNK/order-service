@@ -45,6 +45,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         log.info("OAuth2 login successful. Redirecting to: {}", targetUrl);
         clearAuthenticationAttributes(request);
+
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }
 

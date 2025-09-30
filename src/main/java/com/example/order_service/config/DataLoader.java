@@ -24,16 +24,34 @@ public class DataLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        updateExistingUsersWithNickname();
+        updateExistingUsersWithNullFields();
         createDefaultAdminUser();
         createSampleProducts();
     }
 
-    private void updateExistingUsersWithNickname() {
-        // 닉네임이 없는 기존 사용자들에게 닉네임 추가
+    private void updateExistingUsersWithNullFields() {
+        // username이나 닉네임이 없는 기존 사용자들 수정
         userRepository.findAll().forEach(user -> {
+            boolean needsUpdate = false;
+
+            // username이 null인 경우 email에서 생성
+            if (user.getUsername() == null || user.getUsername().isEmpty()) {
+                String baseUsername = user.getEmail() != null ? user.getEmail().split("@")[0] : "user";
+                String username = baseUsername;
+                int counter = 1;
+
+                while (userRepository.existsByUsername(username)) {
+                    username = baseUsername + counter;
+                    counter++;
+                }
+
+                user.setUsername(username);
+                needsUpdate = true;
+                log.info("Updated user id={} with username: {}", user.getId(), username);
+            }
+
+            // 닉네임이 없는 경우
             if (user.getNickname() == null || user.getNickname().isEmpty()) {
-                // 이름을 닉네임으로 사용, 중복이면 숫자 추가
                 String baseNickname = user.getName() != null ? user.getName() : user.getUsername();
                 String nickname = baseNickname;
                 int counter = 1;
@@ -44,8 +62,12 @@ public class DataLoader implements CommandLineRunner {
                 }
 
                 user.setNickname(nickname);
+                needsUpdate = true;
+                log.info("Updated user id={} with nickname: {}", user.getId(), nickname);
+            }
+
+            if (needsUpdate) {
                 userRepository.save(user);
-                log.info("Updated user {} with nickname: {}", user.getUsername(), nickname);
             }
         });
     }

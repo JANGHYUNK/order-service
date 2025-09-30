@@ -3,6 +3,7 @@ package com.example.order_service.security;
 import com.example.order_service.entity.User;
 import com.example.order_service.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,6 +18,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
@@ -80,6 +82,10 @@ public class CustomUserDetailsService implements UserDetailsService {
         public static UserPrincipal create(User user, Map<String, Object> attributes) {
             UserPrincipal userPrincipal = UserPrincipal.create(user);
             userPrincipal.setAttributes(attributes);
+
+            log.debug("UserPrincipal.create: id={}, email={}, username={}, getName()={}",
+                    userPrincipal.getId(), userPrincipal.getEmail(), userPrincipal.getUsername(), userPrincipal.getName());
+
             return userPrincipal;
         }
 
@@ -136,7 +142,27 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         @Override
         public String getName() {
-            return String.valueOf(id);
+            // OAuth2AuthorizedClient는 principalName이 비어있으면 안 됨
+            // email이 있으면 email을 사용하고, 없으면 username을 사용
+            String name = null;
+
+            if (email != null && !email.isEmpty()) {
+                name = email;
+            } else if (username != null && !username.isEmpty()) {
+                name = username;
+            } else if (id != null) {
+                name = String.valueOf(id);
+            } else {
+                // 모든 값이 null인 경우 기본값
+                name = "unknown";
+            }
+
+            // 빈 문자열이 아닌지 확인
+            if (name == null || name.isEmpty() || name.equals("null")) {
+                return "unknown";
+            }
+
+            return name;
         }
 
         @Override

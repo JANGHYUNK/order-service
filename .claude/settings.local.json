@@ -11,7 +11,8 @@
       "Bash(lsof:*)",
       "Bash(kill:*)",
       "Bash(pkill:*)",
-      "Bash(xargs kill:*)"
+      "Bash(xargs kill:*)",
+      "Bash(mysql:*)"
     ],
     "deny": [],
     "ask": []
