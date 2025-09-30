@@ -71,8 +71,30 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
 
     private User registerNewUser(OAuth2UserRequest oAuth2UserRequest, OAuth2UserInfo oAuth2UserInfo, String email) {
+        String name = oAuth2UserInfo.getName();
+
+        // username 생성: 이메일의 @ 앞부분 사용
+        String baseUsername = email.split("@")[0];
+        String username = baseUsername;
+        int counter = 1;
+        while (userRepository.existsByUsername(username)) {
+            username = baseUsername + counter;
+            counter++;
+        }
+
+        // nickname 생성: 이름 사용, 중복이면 숫자 추가
+        String baseNickname = name != null && !name.isEmpty() ? name : username;
+        String nickname = baseNickname;
+        counter = 1;
+        while (userRepository.existsByNickname(nickname)) {
+            nickname = baseNickname + counter;
+            counter++;
+        }
+
         User user = User.builder()
-                .name(oAuth2UserInfo.getName())
+                .username(username)
+                .name(name)
+                .nickname(nickname)
                 .email(email)
                 .profileImage(oAuth2UserInfo.getImageUrl())
                 .authProvider(User.AuthProvider.valueOf(
@@ -83,8 +105,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .emailVerified(true) // OAuth2 users are pre-verified
                 .build();
 
-        log.info("Registering new OAuth2 user: email={}, provider={}",
-                email, oAuth2UserRequest.getClientRegistration().getRegistrationId());
+        log.info("Registering new OAuth2 user: email={}, username={}, nickname={}, provider={}",
+                email, username, nickname, oAuth2UserRequest.getClientRegistration().getRegistrationId());
 
         return userRepository.save(user);
     }

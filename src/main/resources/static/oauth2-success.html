@@ -21,11 +21,38 @@
             console.log('Token found, saving to localStorage');
             // 토큰을 localStorage에 저장합니다. 프론트엔드에서는 이 토큰을 API 요청 시 사용합니다.
             localStorage.setItem('accessToken', token);
-            console.log('Token saved, redirecting to dashboard');
+            console.log('Token saved, fetching user info to determine redirect');
 
-            // 대시보드나 성공 페이지로 리다이렉트 (메인 페이지 대신)
-            alert('로그인 성공! 토큰이 저장되었습니다.');
-            window.location.href = '/dashboard.html'; // 대시보드가 없다면 메인 페이지로
+            // 사용자 정보를 가져와서 역할에 따라 리다이렉트
+            fetch('http://localhost:8080/api/auth/me', {
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch user info');
+                }
+                return response.json();
+            })
+            .then(user => {
+                console.log('User info:', user);
+                alert('로그인 성공! 환영합니다, ' + user.name + '님!');
+
+                // 역할에 따라 리다이렉트
+                if (user.role === 'ADMIN' || user.role === 'SELLER') {
+                    console.log('Redirecting to dashboard for ' + user.role);
+                    window.location.href = '/dashboard.html';
+                } else {
+                    console.log('Redirecting to main page for USER');
+                    window.location.href = '/';
+                }
+            })
+            .catch(error => {
+                console.error('Failed to fetch user info:', error);
+                alert('사용자 정보를 가져오는데 실패했습니다. 메인 페이지로 이동합니다.');
+                window.location.href = '/';
+            });
         } else {
             console.log('No token found in URL');
             // 토큰이 없는 경우, 에러 메시지를 표시하고 로그인 페이지로 보냅니다.

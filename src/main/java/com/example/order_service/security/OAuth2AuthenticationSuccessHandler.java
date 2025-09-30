@@ -30,8 +30,11 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                       Authentication authentication) throws IOException, ServletException {
 
-        log.info("OAuth2 authentication successful for user: {}",
-                ((CustomUserDetailsService.UserPrincipal) authentication.getPrincipal()).getEmail());
+        CustomUserDetailsService.UserPrincipal userPrincipal = (CustomUserDetailsService.UserPrincipal) authentication.getPrincipal();
+        log.info("OAuth2 authentication successful for user: {}, role: {}, provider: {}",
+                userPrincipal.getEmail(),
+                userPrincipal.getUser().getRole(),
+                userPrincipal.getUser().getAuthProvider());
 
         String targetUrl = determineTargetUrl(request, response, authentication);
 
@@ -40,7 +43,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             return;
         }
 
-        log.info("Redirecting to: {}", targetUrl);
+        log.info("OAuth2 login successful. Redirecting to: {}", targetUrl);
         clearAuthenticationAttributes(request);
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }
@@ -50,15 +53,19 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         CustomUserDetailsService.UserPrincipal userPrincipal = (CustomUserDetailsService.UserPrincipal) authentication.getPrincipal();
 
-        // 모든 OAuth2 사용자에 대해 JWT 토큰 생성 및 로그인 처리
-        log.info("OAuth2 user login successful: email={}, provider={}",
-                userPrincipal.getUser().getEmail(), userPrincipal.getUser().getAuthProvider());
-
+        // JWT 토큰 생성
         String token = tokenProvider.generateAccessToken(authentication);
+        log.info("Generated JWT token for OAuth2 user: email={}, provider={}, role={}",
+                userPrincipal.getUser().getEmail(),
+                userPrincipal.getUser().getAuthProvider(),
+                userPrincipal.getUser().getRole());
 
-        return UriComponentsBuilder.fromUriString(redirectUri)
+        String targetUrl = UriComponentsBuilder.fromUriString(redirectUri)
                 .queryParam("token", token)
                 .build().toUriString();
+
+        log.debug("Target URL with token: {}", targetUrl);
+        return targetUrl;
     }
 
     protected boolean isAuthorizedRedirectUri(String uri) {

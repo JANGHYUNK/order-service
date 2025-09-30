@@ -24,8 +24,30 @@ public class DataLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        updateExistingUsersWithNickname();
         createDefaultAdminUser();
         createSampleProducts();
+    }
+
+    private void updateExistingUsersWithNickname() {
+        // 닉네임이 없는 기존 사용자들에게 닉네임 추가
+        userRepository.findAll().forEach(user -> {
+            if (user.getNickname() == null || user.getNickname().isEmpty()) {
+                // 이름을 닉네임으로 사용, 중복이면 숫자 추가
+                String baseNickname = user.getName() != null ? user.getName() : user.getUsername();
+                String nickname = baseNickname;
+                int counter = 1;
+
+                while (userRepository.existsByNickname(nickname)) {
+                    nickname = baseNickname + counter;
+                    counter++;
+                }
+
+                user.setNickname(nickname);
+                userRepository.save(user);
+                log.info("Updated user {} with nickname: {}", user.getUsername(), nickname);
+            }
+        });
     }
 
     private void createDefaultAdminUser() {
@@ -40,6 +62,7 @@ public class DataLoader implements CommandLineRunner {
                     .email(adminEmail)
                     .password(passwordEncoder.encode("admin"))
                     .name("관리자")
+                    .nickname("관리자")
                     .role(User.Role.ADMIN)
                     .authProvider(User.AuthProvider.LOCAL)
                     .isEnabled(true)

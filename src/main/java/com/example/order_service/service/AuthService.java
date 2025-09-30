@@ -34,17 +34,29 @@ public class AuthService {
     private final EmailService emailService;
 
     public AuthResponse signUp(SignUpRequest signUpRequest) {
-        if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-            throw new RuntimeException("이미 존재하는 이메일입니다.");
+        // 이메일이 입력된 경우에만 중복 체크
+        if (signUpRequest.getEmail() != null && !signUpRequest.getEmail().isEmpty()) {
+            if (userRepository.existsByEmail(signUpRequest.getEmail())) {
+                throw new RuntimeException("이미 존재하는 이메일입니다.");
+            }
         }
 
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
             throw new RuntimeException("이미 존재하는 아이디입니다.");
         }
 
-        // 인증번호가 사전에 확인되었는지 검증
-        if (!emailService.isCodeVerified(signUpRequest.getEmail(), signUpRequest.getVerificationCode())) {
-            throw new RuntimeException("유효하지 않거나 확인되지 않은 인증번호입니다.");
+        if (userRepository.existsByNickname(signUpRequest.getNickname())) {
+            throw new RuntimeException("이미 존재하는 닉네임입니다.");
+        }
+
+        // 이메일이 있고 인증번호가 있는 경우에만 검증
+        boolean emailVerified = false;
+        if (signUpRequest.getEmail() != null && !signUpRequest.getEmail().isEmpty() &&
+            signUpRequest.getVerificationCode() != null && !signUpRequest.getVerificationCode().isEmpty()) {
+            if (!emailService.isCodeVerified(signUpRequest.getEmail(), signUpRequest.getVerificationCode())) {
+                throw new RuntimeException("유효하지 않거나 확인되지 않은 인증번호입니다.");
+            }
+            emailVerified = true;
         }
 
         User user = User.builder()
@@ -52,28 +64,33 @@ public class AuthService {
                 .username(signUpRequest.getUsername())
                 .password(passwordEncoder.encode(signUpRequest.getPassword()))
                 .name(signUpRequest.getName())
+                .nickname(signUpRequest.getNickname())
                 .role(signUpRequest.getRole() != null ? signUpRequest.getRole() : User.Role.USER)
                 .authProvider(User.AuthProvider.LOCAL)
-                .isEnabled(true) // User is already email verified via code
-                .emailVerified(true) // Email verified via 6-digit code
-                .emailVerifiedAt(LocalDateTime.now())
+                .isEnabled(true)
+                .emailVerified(emailVerified)
+                .emailVerifiedAt(emailVerified ? LocalDateTime.now() : null)
                 .build();
 
         User savedUser = userRepository.save(user);
 
-        // Mark verification as used
-        EmailVerification verification = emailVerificationRepository
-                .findByEmailAndVerificationCodeAndIsUsedFalse(savedUser.getEmail(), signUpRequest.getVerificationCode())
-                .orElse(null);
+        // 이메일 인증을 완료한 경우 verification을 used로 표시
+        if (emailVerified) {
+            EmailVerification verification = emailVerificationRepository
+                    .findByEmailAndVerificationCodeAndIsUsedFalse(savedUser.getEmail(), signUpRequest.getVerificationCode())
+                    .orElse(null);
 
-        if (verification != null) {
-            verification.setIsUsed(true);
-            emailVerificationRepository.save(verification);
+            if (verification != null) {
+                verification.setIsUsed(true);
+                emailVerificationRepository.save(verification);
+            }
         }
 
         // Generate tokens for immediate login
-        String accessToken = jwtTokenProvider.generateAccessToken(savedUser.getEmail());
-        String refreshToken = jwtTokenProvider.generateRefreshToken(savedUser.getEmail());
+        // 이메일이 없는 경우 username 사용
+        String identifier = savedUser.getEmail() != null ? savedUser.getEmail() : savedUser.getUsername();
+        String accessToken = jwtTokenProvider.generateAccessToken(identifier);
+        String refreshToken = jwtTokenProvider.generateRefreshToken(identifier);
 
         return AuthResponse.builder()
                 .accessToken(accessToken)
@@ -95,9 +112,9 @@ public class AuthService {
         User user = userRepository.findByUsername(loginRequest.getUsername())
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
-        // Check if user account is enabled and email is verified
-        if (!user.getIsEnabled() || !user.getEmailVerified()) {
-            throw new RuntimeException("이메일 인증이 필요합니다. 이메일을 확인해주세요.");
+        // Check if user account is enabled
+        if (!user.getIsEnabled()) {
+            throw new RuntimeException("비활성화된 계정입니다.");
         }
 
         Authentication authentication = authenticationManager.authenticate(
@@ -262,5 +279,9 @@ public class AuthService {
 
     public boolean isUsernameExists(String username) {
         return userRepository.existsByUsername(username);
+    }
+
+    public boolean isNicknameExists(String nickname) {
+        return userRepository.existsByNickname(nickname);
     }
 }

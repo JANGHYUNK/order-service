@@ -353,12 +353,24 @@
             </div>
 
             <div class="form-group">
-                <label for="email">이메일</label>
+                <label for="nickname">닉네임</label>
                 <div class="input-group">
-                    <input type="email" id="email" name="email" required placeholder="example@email.com">
+                    <input type="text" id="nickname" name="nickname" required minlength="2" maxlength="20" placeholder="2-20자">
+                    <button type="button" id="checkNicknameBtn" class="btn btn-check">중복확인</button>
+                </div>
+                <div id="nicknameStatus" class="status-indicator"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">이메일 (선택사항)</label>
+                <div class="input-group">
+                    <input type="email" id="email" name="email" placeholder="example@email.com">
                     <button type="button" id="sendCodeBtn" class="btn btn-verify">인증전송</button>
                 </div>
                 <div id="emailStatus" class="status-indicator"></div>
+                <small style="color: #666; font-size: 0.85rem; margin-top: 5px; display: block;">
+                    이메일을 입력하고 인증하면 계정 복구 및 알림을 받을 수 있습니다.
+                </small>
             </div>
 
             <div class="form-group" id="verificationCodeGroup" style="display: none;">
@@ -433,8 +445,7 @@
         // State tracking
         let validationState = {
             username: false,
-            email: false,
-            emailVerified: false,
+            nickname: false,
             password: false,
             passwordConfirm: false
         };
@@ -442,6 +453,7 @@
         let currentEmail = '';
         let sendCodeCooldown = 0;
         let verifiedCode = ''; // 검증된 인증번호 저장
+        let emailEntered = false; // 이메일 입력 여부
 
         // Initialize event listeners
         document.addEventListener('DOMContentLoaded', function() {
@@ -449,8 +461,12 @@
             document.getElementById('username').addEventListener('input', debounce(validateUsername, 500));
             document.getElementById('checkUsernameBtn').addEventListener('click', checkUsername);
 
+            // Nickname validation
+            document.getElementById('nickname').addEventListener('input', debounce(validateNickname, 500));
+            document.getElementById('checkNicknameBtn').addEventListener('click', checkNickname);
+
             // Email validation
-            document.getElementById('email').addEventListener('input', debounce(validateEmail, 500));
+            document.getElementById('email').addEventListener('input', handleEmailInput);
             document.getElementById('sendCodeBtn').addEventListener('click', sendVerificationCode);
 
             // Verification code
@@ -535,24 +551,71 @@
             updateSignupButton();
         }
 
-        function validateEmail() {
+        async function validateNickname() {
+            const nickname = document.getElementById('nickname').value.trim();
+            const status = document.getElementById('nicknameStatus');
+
+            if (nickname.length < 2) {
+                showStatus(status, '닉네임은 2자 이상이어야 합니다.', 'error');
+                validationState.nickname = false;
+                updateSignupButton();
+                return;
+            }
+
+            showStatus(status, '확인 중...', 'loading');
+        }
+
+        async function checkNickname() {
+            const nickname = document.getElementById('nickname').value.trim();
+            const status = document.getElementById('nicknameStatus');
+            const btn = document.getElementById('checkNicknameBtn');
+
+            if (nickname.length < 2) {
+                showStatus(status, '닉네임은 2자 이상이어야 합니다.', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '확인 중...';
+
+            try {
+                const response = await fetch(`/api/auth/check-nickname?nickname=${encodeURIComponent(nickname)}`);
+                const data = await response.json();
+
+                if (data.available) {
+                    showStatus(status, '사용 가능한 닉네임입니다.', 'success');
+                    validationState.nickname = true;
+                } else {
+                    showStatus(status, data.message, 'error');
+                    validationState.nickname = false;
+                }
+            } catch (error) {
+                showStatus(status, '확인 중 오류가 발생했습니다.', 'error');
+                validationState.nickname = false;
+            }
+
+            btn.disabled = false;
+            btn.textContent = '중복확인';
+            updateSignupButton();
+        }
+
+        function handleEmailInput() {
             const email = document.getElementById('email').value.trim();
             const status = document.getElementById('emailStatus');
 
             if (!email) {
                 status.style.display = 'none';
-                validationState.email = false;
+                emailEntered = false;
                 updateSignupButton();
                 return;
             }
 
+            emailEntered = true;
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
                 showStatus(status, '올바른 이메일 형식이 아닙니다.', 'error');
-                validationState.email = false;
             } else {
-                showStatus(status, '올바른 이메일 형식입니다.', 'success');
-                validationState.email = true;
+                showStatus(status, '올바른 이메일 형식입니다. 인증을 권장합니다.', 'success');
             }
 
             updateSignupButton();
@@ -563,7 +626,13 @@
             const status = document.getElementById('emailStatus');
             const btn = document.getElementById('sendCodeBtn');
 
-            if (!validationState.email) {
+            if (!email) {
+                showStatus(status, '이메일을 입력해주세요.', 'error');
+                return;
+            }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
                 showStatus(status, '올바른 이메일을 입력해주세요.', 'error');
                 return;
             }
@@ -744,8 +813,9 @@
             const formData = {
                 name: document.getElementById('name').value.trim(),
                 username: document.getElementById('username').value.trim(),
-                email: currentEmail,
-                verificationCode: verifiedCode, // 검증된 코드 사용
+                nickname: document.getElementById('nickname').value.trim(),
+                email: currentEmail || null,
+                verificationCode: verifiedCode || null, // 검증된 코드 사용 (없으면 null)
                 password: document.getElementById('password').value,
                 role: selectedRole
             };

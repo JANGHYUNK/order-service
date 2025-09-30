@@ -24,7 +24,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = true)
     private String email;
 
     @Column(unique = true, nullable = true)
@@ -35,6 +35,9 @@ public class User {
 
     @Column(nullable = false)
     private String name;
+
+    @Column(unique = true, nullable = false)
+    private String nickname;
 
     @Column(name = "profile_image")
     private String profileImage;

@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Service - 프로필</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-back {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-back:hover {
+            background: #5a6268;
+            transform: translateY(-1px);
+        }
+        .btn-logout {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-logout:hover {
+            background: #c82333;
+            transform: translateY(-1px);
+        }
+        .profile-card {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+        .profile-section {
+            margin-bottom: 30px;
+        }
+        .profile-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        .profile-info {
+            display: grid;
+            gap: 20px;
+        }
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+        .info-value {
+            color: #333;
+            font-size: 1.1rem;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+        }
+        .info-value input {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            background: transparent;
+            font-size: 1rem;
+            color: #333;
+        }
+        .info-value input:focus {
+            outline: none;
+        }
+        .info-value.readonly {
+            background: #e9ecef;
+            color: #6c757d;
+        }
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .badge-user {
+            background: #17a2b8;
+            color: white;
+        }
+        .badge-seller {
+            background: #ffc107;
+            color: #333;
+        }
+        .badge-admin {
+            background: #dc3545;
+            color: white;
+        }
+        .badge-verified {
+            background: #28a745;
+            color: white;
+        }
+        .badge-unverified {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-top: 20px;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .edit-mode .info-value {
+            border-color: #667eea;
+        }
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .profile-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>👤 내 프로필</h1>
+                <p>계정 정보를 확인하고 수정할 수 있습니다</p>
+            </div>
+            <div class="action-buttons">
+                <a href="/" class="btn btn-back">홈으로</a>
+                <button class="btn btn-logout" onclick="logout()">로그아웃</button>
+            </div>
+        </div>
+
+        <div class="profile-card">
+            <div class="profile-section">
+                <h2>기본 정보</h2>
+                <div class="profile-info">
+                    <div class="info-item">
+                        <span class="info-label">이름</span>
+                        <div class="info-value" id="nameValue">
+                            <input type="text" id="nameInput" disabled>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">이메일</span>
+                        <div class="info-value readonly" id="emailValue">-</div>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">사용자명</span>
+                        <div class="info-value readonly" id="usernameValue">-</div>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">역할</span>
+                        <div class="info-value readonly">
+                            <span id="roleValue" class="badge badge-user">USER</span>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">인증 제공자</span>
+                        <div class="info-value readonly" id="providerValue">-</div>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">이메일 인증</span>
+                        <div class="info-value readonly">
+                            <span id="verifiedValue" class="badge badge-unverified">미인증</span>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">가입일</span>
+                        <div class="info-value readonly" id="createdAtValue">-</div>
+                    </div>
+                </div>
+
+                <div class="action-buttons" style="margin-top: 20px;">
+                    <button class="btn btn-primary" id="editBtn" onclick="toggleEditMode()">수정하기</button>
+                    <button class="btn btn-primary" id="saveBtn" onclick="saveProfile()" style="display: none;">저장</button>
+                    <button class="btn btn-back" id="cancelBtn" onclick="cancelEdit()" style="display: none;">취소</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let userData = null;
+        let editMode = false;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('accessToken');
+
+            if (!token) {
+                alert('로그인이 필요합니다.');
+                window.location.href = '/login.html';
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8080/api/auth/me', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+
+                if (response.ok) {
+                    userData = await response.json();
+                    displayUserData();
+                } else {
+                    localStorage.removeItem('accessToken');
+                    localStorage.removeItem('refreshToken');
+                    alert('인증에 실패했습니다. 다시 로그인해주세요.');
+                    window.location.href = '/login.html';
+                }
+            } catch (error) {
+                console.error('사용자 정보 조회 실패:', error);
+                alert('사용자 정보를 불러오는데 실패했습니다.');
+                window.location.href = '/login.html';
+            }
+        });
+
+        function displayUserData() {
+            if (!userData) return;
+
+            document.getElementById('nameInput').value = userData.name || '-';
+            document.getElementById('emailValue').textContent = userData.email || '-';
+            document.getElementById('usernameValue').textContent = userData.username || '-';
+            document.getElementById('providerValue').textContent = userData.authProvider || '-';
+
+            // 역할 배지
+            const roleValue = document.getElementById('roleValue');
+            roleValue.textContent = userData.role || 'USER';
+            roleValue.className = 'badge badge-' + (userData.role || 'user').toLowerCase();
+
+            // 이메일 인증 배지
+            const verifiedValue = document.getElementById('verifiedValue');
+            if (userData.emailVerified) {
+                verifiedValue.textContent = '인증됨';
+                verifiedValue.className = 'badge badge-verified';
+            } else {
+                verifiedValue.textContent = '미인증';
+                verifiedValue.className = 'badge badge-unverified';
+            }
+
+            // 가입일
+            if (userData.createdAt) {
+                const date = new Date(userData.createdAt);
+                document.getElementById('createdAtValue').textContent = date.toLocaleString('ko-KR');
+            }
+        }
+
+        function toggleEditMode() {
+            editMode = true;
+            document.getElementById('nameInput').disabled = false;
+            document.getElementById('nameValue').classList.add('edit-mode');
+
+            document.getElementById('editBtn').style.display = 'none';
+            document.getElementById('saveBtn').style.display = 'inline-block';
+            document.getElementById('cancelBtn').style.display = 'inline-block';
+        }
+
+        function cancelEdit() {
+            editMode = false;
+            document.getElementById('nameInput').disabled = true;
+            document.getElementById('nameValue').classList.remove('edit-mode');
+            document.getElementById('nameInput').value = userData.name || '-';
+
+            document.getElementById('editBtn').style.display = 'inline-block';
+            document.getElementById('saveBtn').style.display = 'none';
+            document.getElementById('cancelBtn').style.display = 'none';
+        }
+
+        async function saveProfile() {
+            const token = localStorage.getItem('accessToken');
+            const newName = document.getElementById('nameInput').value.trim();
+
+            if (!newName) {
+                alert('이름을 입력해주세요.');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8080/api/user/profile', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        name: newName
+                    })
+                });
+
+                if (response.ok) {
+                    userData = await response.json();
+                    displayUserData();
+                    cancelEdit();
+                    alert('프로필이 업데이트되었습니다.');
+                } else {
+                    const error = await response.text();
+                    alert('프로필 업데이트 실패: ' + error);
+                }
+            } catch (error) {
+                console.error('프로필 업데이트 실패:', error);
+                alert('프로필 업데이트 중 오류가 발생했습니다.');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            alert('로그아웃 되었습니다.');
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>

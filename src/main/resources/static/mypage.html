@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Service - 마이페이지</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        /* Navigation */
+        .navbar {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2rem;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+            text-decoration: none;
+        }
+        .nav-actions {
+            display: flex;
+            gap: 1rem;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 2rem;
+            min-height: calc(100vh - 100px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+        .user-profile {
+            text-align: center;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #f0f0f0;
+            margin-bottom: 2rem;
+        }
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            margin: 0 auto 1rem;
+        }
+        .user-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        .user-email {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .menu-list {
+            list-style: none;
+        }
+        .menu-item {
+            margin-bottom: 0.5rem;
+        }
+        .menu-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            color: #666;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        .menu-link:hover {
+            background: #f8f9fa;
+            color: #667eea;
+        }
+        .menu-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .menu-icon {
+            font-size: 1.2rem;
+        }
+
+        /* Content Area */
+        .content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .section-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .section-title {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        .section-description {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        /* Orders Section */
+        .order-list {
+            display: grid;
+            gap: 1.5rem;
+        }
+        .order-card {
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+        }
+        .order-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        }
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .order-date {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .order-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .order-items {
+            margin-bottom: 1rem;
+        }
+        .order-item {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+        }
+        .order-item-info {
+            flex: 1;
+        }
+        .order-item-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.25rem;
+        }
+        .order-item-price {
+            color: #667eea;
+            font-weight: 600;
+        }
+        .order-total {
+            text-align: right;
+            padding-top: 1rem;
+            border-top: 1px solid #e9ecef;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* Settings Section */
+        .settings-form {
+            display: grid;
+            gap: 1.5rem;
+            max-width: 600px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95rem;
+        }
+        .form-input {
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .form-input:disabled {
+            background: #e9ecef;
+            color: #6c757d;
+            cursor: not-allowed;
+        }
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .badge-user {
+            background: #17a2b8;
+            color: white;
+        }
+        .badge-verified {
+            background: #28a745;
+            color: white;
+        }
+        .badge-unverified {
+            background: #6c757d;
+            color: white;
+        }
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        /* Likes Section */
+        .likes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        .like-card {
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .like-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        .like-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            background: #f8f9fa;
+        }
+        .like-info {
+            padding: 1rem;
+        }
+        .like-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        .like-price {
+            color: #667eea;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .like-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #666;
+        }
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        .empty-text {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+        .empty-subtext {
+            font-size: 0.9rem;
+            color: #999;
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                position: static;
+            }
+            .user-profile {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                text-align: left;
+            }
+            .user-avatar {
+                margin: 0;
+            }
+            .menu-list {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 0.5rem;
+            }
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+            .content {
+                padding: 1.5rem;
+            }
+            .likes-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">🛍️ Order Service</a>
+            <div class="nav-actions">
+                <a href="/" class="btn btn-secondary">홈으로</a>
+                <button onclick="logout()" class="btn btn-secondary">로그아웃</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="user-profile">
+                <div class="user-avatar" id="userAvatar">👤</div>
+                <div>
+                    <div class="user-name" id="userName">사용자</div>
+                    <div class="user-email" id="userEmail">user@example.com</div>
+                </div>
+            </div>
+            <nav>
+                <ul class="menu-list">
+                    <li class="menu-item">
+                        <a href="#orders" class="menu-link active" onclick="showSection('orders', event)">
+                            <span class="menu-icon">📦</span>
+                            <span>주문목록</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#settings" class="menu-link" onclick="showSection('settings', event)">
+                            <span class="menu-icon">⚙️</span>
+                            <span>계정설정</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#likes" class="menu-link" onclick="showSection('likes', event)">
+                            <span class="menu-icon">❤️</span>
+                            <span>좋아요</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Content Area -->
+        <main class="content">
+            <!-- Orders Section -->
+            <section id="orders-section" class="content-section active">
+                <div class="section-header">
+                    <h2 class="section-title">주문목록</h2>
+                    <p class="section-description">주문하신 상품들의 배송 상태를 확인할 수 있습니다</p>
+                </div>
+                <div id="ordersList" class="order-list">
+                    <!-- Orders will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings-section" class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">계정설정</h2>
+                    <p class="section-description">회원정보를 수정하고 관리할 수 있습니다</p>
+                </div>
+                <form class="settings-form" onsubmit="saveSettings(event)">
+                    <div class="form-group">
+                        <label class="form-label">이름</label>
+                        <input type="text" id="settingsName" class="form-input" placeholder="이름을 입력하세요">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">닉네임</label>
+                        <input type="text" id="settingsNickname" class="form-input" placeholder="닉네임을 입력하세요">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">이메일</label>
+                        <input type="email" id="settingsEmail" class="form-input" placeholder="이메일을 입력하세요 (선택사항)">
+                        <small style="color: #666; font-size: 0.85rem; margin-top: 5px; display: block;">
+                            이메일 변경 시 인증이 필요합니다
+                        </small>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">사용자명</label>
+                        <input type="text" id="settingsUsername" class="form-input" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">역할</label>
+                        <div>
+                            <span id="settingsRole" class="badge badge-user">USER</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">이메일 인증 상태</label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <span id="settingsVerified" class="badge badge-unverified">미인증</span>
+                            <button type="button" id="emailVerifyBtn" class="btn btn-primary btn-sm" style="display: none;" onclick="sendVerificationEmail()">
+                                이메일 인증하기
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">저장하기</button>
+                        <button type="button" class="btn btn-secondary" onclick="loadUserData()">취소</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Likes Section -->
+            <section id="likes-section" class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">좋아요</h2>
+                    <p class="section-description">관심있는 상품들을 모아볼 수 있습니다</p>
+                </div>
+                <div id="likesList" class="likes-grid">
+                    <!-- Liked products will be loaded here -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        let userData = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('accessToken');
+
+            if (!token) {
+                alert('로그인이 필요합니다.');
+                window.location.href = '/login.html';
+                return;
+            }
+
+            await loadUserData();
+            await loadOrders();
+            await loadLikes();
+        });
+
+        async function loadUserData() {
+            const token = localStorage.getItem('accessToken');
+
+            try {
+                const response = await fetch('http://localhost:8080/api/auth/me', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+
+                if (response.ok) {
+                    userData = await response.json();
+                    displayUserData();
+                } else {
+                    localStorage.removeItem('accessToken');
+                    localStorage.removeItem('refreshToken');
+                    alert('인증에 실패했습니다. 다시 로그인해주세요.');
+                    window.location.href = '/login.html';
+                }
+            } catch (error) {
+                console.error('사용자 정보 조회 실패:', error);
+                alert('사용자 정보를 불러오는데 실패했습니다.');
+            }
+        }
+
+        function displayUserData() {
+            if (!userData) return;
+
+            // Sidebar
+            document.getElementById('userName').textContent = userData.nickname || userData.name || '사용자';
+            document.getElementById('userEmail').textContent = userData.email || '';
+            document.getElementById('userAvatar').textContent = (userData.nickname || userData.name || '사용자')[0];
+
+            // Settings form
+            document.getElementById('settingsName').value = userData.name || '';
+            document.getElementById('settingsNickname').value = userData.nickname || '';
+            document.getElementById('settingsEmail').value = userData.email || '';
+            document.getElementById('settingsUsername').value = userData.username || '-';
+            document.getElementById('settingsRole').textContent = userData.role || 'USER';
+
+            const verifiedBadge = document.getElementById('settingsVerified');
+            const verifyBtn = document.getElementById('emailVerifyBtn');
+
+            if (userData.emailVerified) {
+                verifiedBadge.textContent = '인증됨';
+                verifiedBadge.className = 'badge badge-verified';
+                verifyBtn.style.display = 'none';
+            } else {
+                verifiedBadge.textContent = '미인증';
+                verifiedBadge.className = 'badge badge-unverified';
+                // 이메일이 있고 미인증인 경우에만 인증 버튼 표시
+                if (userData.email && userData.email.trim() !== '') {
+                    verifyBtn.style.display = 'inline-block';
+                } else {
+                    verifyBtn.style.display = 'none';
+                }
+            }
+        }
+
+        async function loadOrders() {
+            const ordersList = document.getElementById('ordersList');
+
+            // Mock data for demonstration
+            const orders = [];
+
+            if (orders.length === 0) {
+                ordersList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📦</div>
+                        <div class="empty-text">주문 내역이 없습니다</div>
+                        <div class="empty-subtext">상품을 주문하고 배송 상태를 확인해보세요</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Render orders here when API is available
+        }
+
+        async function loadLikes() {
+            const likesList = document.getElementById('likesList');
+
+            // Mock data for demonstration
+            const likes = [];
+
+            if (likes.length === 0) {
+                likesList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">❤️</div>
+                        <div class="empty-text">좋아요한 상품이 없습니다</div>
+                        <div class="empty-subtext">마음에 드는 상품에 좋아요를 눌러보세요</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Render likes here when API is available
+        }
+
+        function showSection(section, event) {
+            event.preventDefault();
+
+            // Update menu active state
+            document.querySelectorAll('.menu-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+
+            // Show selected section
+            document.querySelectorAll('.content-section').forEach(sec => {
+                sec.classList.remove('active');
+            });
+            document.getElementById(section + '-section').classList.add('active');
+        }
+
+        async function saveSettings(event) {
+            event.preventDefault();
+
+            const token = localStorage.getItem('accessToken');
+            const newName = document.getElementById('settingsName').value.trim();
+            const newNickname = document.getElementById('settingsNickname').value.trim();
+            const newEmail = document.getElementById('settingsEmail').value.trim();
+
+            if (!newName) {
+                alert('이름을 입력해주세요.');
+                return;
+            }
+
+            if (!newNickname) {
+                alert('닉네임을 입력해주세요.');
+                return;
+            }
+
+            const updateData = {
+                name: newName,
+                nickname: newNickname
+            };
+
+            // 이메일이 변경되었는지 확인
+            if (newEmail !== (userData.email || '')) {
+                updateData.email = newEmail;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8080/api/user/profile', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify(updateData)
+                });
+
+                if (response.ok) {
+                    userData = await response.json();
+                    displayUserData();
+                    alert('계정 정보가 업데이트되었습니다.');
+
+                    // 이메일이 변경되었다면 인증 안내
+                    if (updateData.email) {
+                        alert('이메일이 변경되었습니다. 이메일 인증을 진행해주세요.');
+                    }
+                } else {
+                    const error = await response.text();
+                    alert('계정 정보 업데이트 실패: ' + error);
+                }
+            } catch (error) {
+                console.error('계정 정보 업데이트 실패:', error);
+                alert('계정 정보 업데이트 중 오류가 발생했습니다.');
+            }
+        }
+
+        async function sendVerificationEmail() {
+            const token = localStorage.getItem('accessToken');
+            const email = userData.email;
+
+            if (!email) {
+                alert('등록된 이메일이 없습니다. 계정설정에서 이메일을 먼저 등록해주세요.');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8080/api/auth/send-verification-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+
+                if (response.ok) {
+                    const code = prompt('이메일로 전송된 6자리 인증번호를 입력해주세요:');
+                    if (code) {
+                        await verifyEmailCode(email, code);
+                    }
+                } else {
+                    const data = await response.json();
+                    alert('인증 이메일 전송 실패: ' + (data.message || '오류가 발생했습니다.'));
+                }
+            } catch (error) {
+                console.error('인증 이메일 전송 실패:', error);
+                alert('인증 이메일 전송 중 오류가 발생했습니다.');
+            }
+        }
+
+        async function verifyEmailCode(email, code) {
+            const token = localStorage.getItem('accessToken');
+
+            try {
+                const response = await fetch('http://localhost:8080/api/auth/verify-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ email: email, code: code })
+                });
+
+                const data = await response.json();
+
+                if (data.verified) {
+                    alert('이메일 인증이 완료되었습니다!');
+                    await loadUserData(); // 사용자 정보 새로고침
+                } else {
+                    alert('인증 실패: ' + (data.message || '잘못된 인증번호입니다.'));
+                }
+            } catch (error) {
+                console.error('인증 코드 확인 실패:', error);
+                alert('인증 코드 확인 중 오류가 발생했습니다.');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            alert('로그아웃 되었습니다.');
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>

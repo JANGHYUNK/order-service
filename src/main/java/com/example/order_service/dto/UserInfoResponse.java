@@ -15,9 +15,11 @@ public class UserInfoResponse {
     private String email;
     private String username;
     private String name;
+    private String nickname;
     private String role;
     private String profileImage;
     private boolean emailVerified;
+    private String authProvider;
 
     public static UserInfoResponse from(User user) {
         return UserInfoResponse.builder()
@@ -25,9 +27,11 @@ public class UserInfoResponse {
                 .email(user.getEmail())
                 .username(user.getUsername())
                 .name(user.getName())
+                .nickname(user.getNickname())
                 .role(user.getRole().name())
                 .profileImage(user.getProfileImage())
                 .emailVerified(user.getEmailVerified())
+                .authProvider(user.getAuthProvider().name())
                 .build();
     }
 }

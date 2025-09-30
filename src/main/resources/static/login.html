@@ -265,25 +265,19 @@
                                 const userInfo = await userResponse.json();
 
                                 // 역할에 따른 리다이렉트
-                                switch(userInfo.role) {
-                                    case 'ADMIN':
-                                        window.location.href = '/admin/dashboard';
-                                        break;
-                                    case 'SELLER':
-                                        window.location.href = '/seller/dashboard';
-                                        break;
-                                    case 'USER':
-                                    default:
-                                        window.location.href = '/dashboard.html';
-                                        break;
+                                if (userInfo.role === 'ADMIN' || userInfo.role === 'SELLER') {
+                                    window.location.href = '/dashboard.html';
+                                } else {
+                                    // 일반 사용자는 메인 페이지로
+                                    window.location.href = '/';
                                 }
                             } else {
-                                // 사용자 정보를 가져올 수 없는 경우 기본 대쉬보드로
-                                window.location.href = '/dashboard.html';
+                                // 사용자 정보를 가져올 수 없는 경우 메인 페이지로
+                                window.location.href = '/';
                             }
                         } catch (error) {
                             console.error('사용자 정보 조회 오류:', error);
-                            window.location.href = '/dashboard.html';
+                            window.location.href = '/';
                         }
                     }, 1000);
                 } else {

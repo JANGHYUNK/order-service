@@ -18,6 +18,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByUsername(String username);
 
+    boolean existsByNickname(String nickname);
+
     Optional<User> findByAuthProviderAndProviderId(User.AuthProvider authProvider, String providerId);
 
     List<User> findByRole(User.Role role);

@@ -60,7 +60,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/", "/error", "/api/auth/**", "/api/public/**", "/login/**", "/oauth2/**",
-                                      "/static/**", "*.html", "*.css", "*.js", "*.png", "*.jpg", "*.ico").permitAll()
+                                      "/static/**", "/*.html", "/*.css", "/*.js", "/*.png", "/*.jpg", "/*.ico").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/seller/**").hasRole("SELLER")
                         .requestMatchers("/user/**").hasAnyRole("USER", "SELLER", "ADMIN")

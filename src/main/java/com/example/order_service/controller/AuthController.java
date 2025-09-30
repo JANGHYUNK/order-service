@@ -187,6 +187,23 @@ public class AuthController {
                     "available", !exists,
                     "message", exists ? "이미 사용 중인 아이디입니다." : "사용 가능한 아이디입니다."
             ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("message", "서버 오류가 발생했습니다."));
+        }
+    }
+
+    @GetMapping("/check-nickname")
+    public ResponseEntity<?> checkNickname(@RequestParam("nickname") String nickname) {
+        try {
+            if (nickname == null || nickname.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "닉네임이 필요합니다."));
+            }
+
+            boolean exists = authService.isNicknameExists(nickname);
+            return ResponseEntity.ok(Map.of(
+                    "available", !exists,
+                    "message", exists ? "이미 사용 중인 닉네임입니다." : "사용 가능한 닉네임입니다."
+            ));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }

@@ -380,7 +380,8 @@
                     </div>
                     <div class="user-info" id="userInfo">
                         <span id="userName">사용자</span>
-                        <a href="/dashboard.html" class="btn btn-primary btn-sm">대시보드</a>
+                        <a href="/mypage.html" id="mypageBtn" class="btn btn-primary btn-sm">마이페이지</a>
+                        <a href="/dashboard.html" id="dashboardBtn" class="btn btn-primary btn-sm" style="display: none;">대시보드</a>
                         <button onclick="logout()" class="btn btn-secondary btn-sm">로그아웃</button>
                     </div>
                 </div>
@@ -454,6 +455,17 @@
                     document.getElementById('userName').textContent = user.name;
                     authButtons.classList.add('hide');
                     userInfo.classList.add('show');
+
+                    // 역할에 따라 버튼 표시
+                    const mypageBtn = document.getElementById('mypageBtn');
+                    const dashboardBtn = document.getElementById('dashboardBtn');
+                    if (user.role === 'ADMIN' || user.role === 'SELLER') {
+                        mypageBtn.style.display = 'none';
+                        dashboardBtn.style.display = 'inline-flex';
+                    } else {
+                        mypageBtn.style.display = 'inline-flex';
+                        dashboardBtn.style.display = 'none';
+                    }
                 })
                 .catch(error => {
                     console.error('Auth check failed:', error);
