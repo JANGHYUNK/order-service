@@ -271,6 +271,52 @@
             color: #0c5460;
             border: 1px solid #bee5eb;
         }
+        .role-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .role-option {
+            cursor: pointer;
+        }
+        .role-option input[type="radio"] {
+            display: none;
+        }
+        .role-card {
+            display: block;
+            padding: 20px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        .role-option input[type="radio"]:checked + .role-card {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+        .role-card:hover {
+            border-color: #667eea;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        .role-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        .role-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        .role-description {
+            font-size: 0.85rem;
+            color: #666;
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body>
@@ -333,6 +379,28 @@
             <div class="form-group">
                 <label for="confirmPassword">비밀번호 확인</label>
                 <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="비밀번호를 다시 입력해주세요">
+            </div>
+
+            <div class="form-group">
+                <label>계정 유형</label>
+                <div class="role-options">
+                    <label class="role-option">
+                        <input type="radio" name="role" value="USER" checked>
+                        <span class="role-card">
+                            <div class="role-icon">👤</div>
+                            <div class="role-title">일반 사용자</div>
+                            <div class="role-description">상품을 구매하고 주문을 관리합니다</div>
+                        </span>
+                    </label>
+                    <label class="role-option">
+                        <input type="radio" name="role" value="SELLER">
+                        <span class="role-card">
+                            <div class="role-icon">🏪</div>
+                            <div class="role-title">판매자</div>
+                            <div class="role-description">상품을 등록하고 판매를 관리합니다</div>
+                        </span>
+                    </label>
+                </div>
             </div>
 
             <button type="submit" id="signupBtn" class="btn btn-primary" disabled>회원가입</button>
@@ -671,12 +739,15 @@
             errorMessage.style.display = 'none';
             successMessage.style.display = 'none';
 
+            const selectedRole = document.querySelector('input[name="role"]:checked').value;
+
             const formData = {
                 name: document.getElementById('name').value.trim(),
                 username: document.getElementById('username').value.trim(),
                 email: currentEmail,
                 verificationCode: verifiedCode, // 검증된 코드 사용
-                password: document.getElementById('password').value
+                password: document.getElementById('password').value,
+                role: selectedRole
             };
 
             try {

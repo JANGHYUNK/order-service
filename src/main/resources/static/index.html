@@ -3,175 +3,613 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Service - 홈</title>
+    <title>Order Service - 쇼핑몰</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
             color: #333;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            background-color: #f8f9fa;
         }
-        .container {
+
+        /* Navigation */
+        .navbar {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 0;
+        }
+
+        .nav-container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2rem;
         }
-        header {
-            text-align: center;
-            margin-bottom: 50px;
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .search-bar {
+            flex: 1;
+            max-width: 400px;
+            margin: 0 2rem;
+            position: relative;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 12px 45px 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .search-bar button {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #667eea;
             color: white;
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        header h1 {
-            font-size: 3em;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
         }
-        header p {
-            font-size: 1.2em;
-            opacity: 0.9;
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
-        .auth-section {
-            background: white;
-            border-radius: 15px;
-            padding: 40px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            text-align: center;
-            margin-bottom: 30px;
+
+        .user-info {
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
         }
+
+        .user-info.show {
+            display: flex;
+        }
+
         .auth-buttons {
             display: flex;
-            gap: 20px;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-bottom: 30px;
+            gap: 0.5rem;
         }
+
+        .auth-buttons.hide {
+            display: none;
+        }
+
         .btn {
-            padding: 15px 30px;
+            padding: 8px 16px;
             border: none;
-            border-radius: 25px;
-            font-size: 16px;
-            font-weight: bold;
-            text-decoration: none;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-block;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
         }
+
         .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
+
         .btn-secondary {
             background: #f8f9fa;
             color: #333;
-            border: 2px solid #dee2e6;
+            border: 1px solid #dee2e6;
         }
+
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
-        .oauth-section {
-            margin-top: 30px;
-            padding-top: 30px;
-            border-top: 1px solid #eee;
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
         }
-        .oauth-buttons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        .btn-google {
-            background: #db4437;
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-        }
-        .btn-kakao {
-            background: #fee500;
-            color: #3c1e1e;
-        }
-        .btn-naver {
-            background: #03c75a;
-            color: white;
-        }
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-top: 50px;
-        }
-        .feature-card {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            padding: 4rem 2rem;
             text-align: center;
         }
-        .feature-icon {
-            font-size: 3em;
-            margin-bottom: 20px;
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
-        .feature-card h3 {
-            margin-bottom: 15px;
+
+        .hero p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Category Navigation */
+        .category-nav {
+            background: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .category-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .category-list {
+            display: flex;
+            gap: 2rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+
+        .category-item {
+            color: #666;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            white-space: nowrap;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+
+        .category-item:hover,
+        .category-item.active {
+            background: #667eea;
+            color: white;
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
             color: #333;
         }
-        .feature-card p {
+
+        /* Product Grid */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #f8f9fa;
+        }
+
+        .product-info {
+            padding: 1.5rem;
+        }
+
+        .product-category {
+            color: #667eea;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .product-description {
             color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .product-price {
+            color: #667eea;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .product-stock {
+            color: #28a745;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+
+        .product-stock.low {
+            color: #ffc107;
+        }
+
+        .product-stock.out {
+            color: #dc3545;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .loading.hide {
+            display: none;
+        }
+
+        /* Error */
+        .error {
+            text-align: center;
+            padding: 2rem;
+            color: #dc3545;
+            background: #f8d7da;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .error.hide {
+            display: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-container {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+            }
+
+            .search-bar {
+                max-width: 100%;
+                margin: 0;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .category-list {
+                gap: 1rem;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                gap: 1rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🛍️ Order Service</h1>
-            <p>안전하고 빠른 주문 서비스를 경험해보세요</p>
-        </header>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                🛍️ Order Service
+            </a>
 
-        <div class="auth-section">
-            <h2 style="margin-bottom: 30px; color: #333;">시작하기</h2>
-
-            <div class="auth-buttons">
-                <a href="/login.html" class="btn btn-primary">로그인</a>
-                <a href="/signup.html" class="btn btn-secondary">회원가입</a>
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="상품을 검색해보세요...">
+                <button onclick="searchProducts()">🔍</button>
             </div>
 
-            <div class="oauth-section">
-                <h3 style="margin-bottom: 20px; color: #666;">간편 로그인</h3>
-                <div class="oauth-buttons">
-                    <a href="/oauth2/authorization/google" class="btn btn-google">
-                        📧 Google로 시작하기
-                    </a>
-                    <a href="/oauth2/authorization/kakao" class="btn btn-kakao">
-                        💬 Kakao로 시작하기
-                    </a>
-                    <a href="/oauth2/authorization/naver" class="btn btn-naver">
-                        🟢 Naver로 시작하기
-                    </a>
+            <div class="nav-actions">
+                <div class="user-menu">
+                    <div class="auth-buttons" id="authButtons">
+                        <a href="/login.html" class="btn btn-secondary btn-sm">로그인</a>
+                        <a href="/signup.html" class="btn btn-primary btn-sm">회원가입</a>
+                    </div>
+                    <div class="user-info" id="userInfo">
+                        <span id="userName">사용자</span>
+                        <a href="/dashboard.html" class="btn btn-primary btn-sm">대시보드</a>
+                        <button onclick="logout()" class="btn btn-secondary btn-sm">로그아웃</button>
+                    </div>
                 </div>
             </div>
         </div>
+    </nav>
 
-        <div class="features">
-            <div class="feature-card">
-                <div class="feature-icon">🔒</div>
-                <h3>안전한 인증</h3>
-                <p>JWT 토큰과 OAuth2를 통한 안전한 사용자 인증 시스템</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">⚡</div>
-                <h3>빠른 처리</h3>
-                <p>실시간 주문 처리와 빠른 응답 속도를 제공합니다</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🛡️</div>
-                <h3>데이터 보호</h3>
-                <p>사용자 데이터는 안전하게 암호화되어 보호됩니다</p>
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>최고의 쇼핑 경험</h1>
+        <p>다양한 상품을 만나보고 안전하고 빠른 주문 서비스를 경험해보세요</p>
+    </section>
+
+    <!-- Category Navigation -->
+    <nav class="category-nav">
+        <div class="category-container">
+            <div class="category-list" id="categoryList">
+                <a href="#" class="category-item active" onclick="filterByCategory('')">전체</a>
+                <!-- Categories will be loaded dynamically -->
             </div>
         </div>
-    </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <h2 class="section-title" id="sectionTitle">인기 상품</h2>
+
+        <div class="loading" id="loading">
+            상품을 불러오는 중...
+        </div>
+
+        <div class="error hide" id="error">
+            상품을 불러오는데 실패했습니다.
+        </div>
+
+        <div class="products-grid" id="productsGrid">
+            <!-- Products will be loaded dynamically -->
+        </div>
+    </main>
+
+    <script>
+        let currentCategory = '';
+        let products = [];
+
+        // Check authentication status
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthStatus();
+            loadCategories();
+            loadProducts();
+        });
+
+        function checkAuthStatus() {
+            const token = localStorage.getItem('accessToken');
+            const authButtons = document.getElementById('authButtons');
+            const userInfo = document.getElementById('userInfo');
+
+            if (token) {
+                // User is logged in, fetch user info
+                fetch('http://localhost:8080/api/auth/me', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Failed to fetch user info');
+                })
+                .then(user => {
+                    document.getElementById('userName').textContent = user.name;
+                    authButtons.classList.add('hide');
+                    userInfo.classList.add('show');
+                })
+                .catch(error => {
+                    console.error('Auth check failed:', error);
+                    localStorage.removeItem('accessToken');
+                    localStorage.removeItem('refreshToken');
+                });
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            location.reload();
+        }
+
+        async function loadCategories() {
+            try {
+                const response = await fetch('http://localhost:8080/api/public/categories');
+                const categories = await response.json();
+
+                const categoryList = document.getElementById('categoryList');
+
+                categories.forEach(category => {
+                    const categoryItem = document.createElement('a');
+                    categoryItem.href = '#';
+                    categoryItem.className = 'category-item';
+                    categoryItem.textContent = category;
+                    categoryItem.onclick = () => filterByCategory(category);
+                    categoryList.appendChild(categoryItem);
+                });
+            } catch (error) {
+                console.error('Failed to load categories:', error);
+            }
+        }
+
+        async function loadProducts(category = '') {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const productsGrid = document.getElementById('productsGrid');
+
+            loading.classList.remove('hide');
+            error.classList.add('hide');
+            productsGrid.innerHTML = '';
+
+            try {
+                let url = 'http://localhost:8080/api/public/products?size=12';
+                if (category) {
+                    url += `&category=${encodeURIComponent(category)}`;
+                }
+
+                const response = await fetch(url);
+                const data = await response.json();
+                products = data;
+
+                loading.classList.add('hide');
+
+                if (products.length === 0) {
+                    productsGrid.innerHTML = '<div style="text-align: center; color: #666; grid-column: 1/-1;">상품이 없습니다.</div>';
+                    return;
+                }
+
+                products.forEach(product => {
+                    const productCard = createProductCard(product);
+                    productsGrid.appendChild(productCard);
+                });
+
+            } catch (err) {
+                console.error('Failed to load products:', err);
+                loading.classList.add('hide');
+                error.classList.remove('hide');
+            }
+        }
+
+        function createProductCard(product) {
+            const card = document.createElement('div');
+            card.className = 'product-card';
+            card.onclick = () => showProductDetail(product);
+
+            let stockClass = '';
+            let stockText = `재고: ${product.stockQuantity}개`;
+
+            if (product.stockQuantity === 0) {
+                stockClass = 'out';
+                stockText = '품절';
+            } else if (product.stockQuantity <= 10) {
+                stockClass = 'low';
+                stockText = `재고 부족: ${product.stockQuantity}개`;
+            }
+
+            card.innerHTML = `
+                <img src="${product.imageUrl || '/placeholder.jpg'}" alt="${product.name}" class="product-image"
+                     onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjhGOUZBIi8+CjxwYXRoIGQ9Ik0xMjUgNzVIMTc1VjEyNUgxMjVWNzVaIiBmaWxsPSIjREVFMkU2Ii8+CjwvnZnPg=='">
+                <div class="product-info">
+                    <div class="product-category">${product.category || '기타'}</div>
+                    <div class="product-name">${product.name}</div>
+                    <div class="product-description">${product.description}</div>
+                    <div class="product-price">${parseInt(product.price).toLocaleString()}원</div>
+                    <div class="product-stock ${stockClass}">${stockText}</div>
+                </div>
+            `;
+
+            return card;
+        }
+
+        function filterByCategory(category) {
+            currentCategory = category;
+
+            // Update active category
+            document.querySelectorAll('.category-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Update section title
+            const sectionTitle = document.getElementById('sectionTitle');
+            sectionTitle.textContent = category ? `${category} 상품` : '인기 상품';
+
+            // Load products
+            loadProducts(category);
+        }
+
+        function searchProducts() {
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            if (!searchTerm) return;
+
+            const filteredProducts = products.filter(product =>
+                product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                product.description.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            const productsGrid = document.getElementById('productsGrid');
+            productsGrid.innerHTML = '';
+
+            if (filteredProducts.length === 0) {
+                productsGrid.innerHTML = '<div style="text-align: center; color: #666; grid-column: 1/-1;">검색 결과가 없습니다.</div>';
+                return;
+            }
+
+            filteredProducts.forEach(product => {
+                const productCard = createProductCard(product);
+                productsGrid.appendChild(productCard);
+            });
+
+            document.getElementById('sectionTitle').textContent = `"${searchTerm}" 검색 결과`;
+        }
+
+        function showProductDetail(product) {
+            alert(`상품 상세 페이지는 준비 중입니다.\n\n상품명: ${product.name}\n가격: ${parseInt(product.price).toLocaleString()}원`);
+        }
+
+        // Enter key search
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchProducts();
+            }
+        });
+    </script>
 </body>
 </html>

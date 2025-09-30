@@ -59,8 +59,11 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/", "/error", "/api/auth/**", "/login/**", "/oauth2/**",
+                        .requestMatchers("/", "/error", "/api/auth/**", "/api/public/**", "/login/**", "/oauth2/**",
                                       "/static/**", "*.html", "*.css", "*.js", "*.png", "*.jpg", "*.ico").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/seller/**").hasRole("SELLER")
+                        .requestMatchers("/user/**").hasAnyRole("USER", "SELLER", "ADMIN")
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2

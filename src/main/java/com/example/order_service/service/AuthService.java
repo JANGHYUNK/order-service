@@ -52,7 +52,7 @@ public class AuthService {
                 .username(signUpRequest.getUsername())
                 .password(passwordEncoder.encode(signUpRequest.getPassword()))
                 .name(signUpRequest.getName())
-                .role(User.Role.USER)
+                .role(signUpRequest.getRole() != null ? signUpRequest.getRole() : User.Role.USER)
                 .authProvider(User.AuthProvider.LOCAL)
                 .isEnabled(true) // User is already email verified via code
                 .emailVerified(true) // Email verified via 6-digit code

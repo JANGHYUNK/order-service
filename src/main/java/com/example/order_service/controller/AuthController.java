@@ -4,11 +4,16 @@ import com.example.order_service.dto.AuthResponse;
 import com.example.order_service.dto.LoginRequest;
 import com.example.order_service.dto.OAuth2SignupRequest;
 import com.example.order_service.dto.SignUpRequest;
+import com.example.order_service.dto.UserInfoResponse;
+import com.example.order_service.entity.User;
+import com.example.order_service.security.CustomUserDetailsService;
 import com.example.order_service.service.AuthService;
 import com.example.order_service.service.EmailService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -20,6 +25,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final EmailService emailService;
+    private final CustomUserDetailsService userDetailsService;
 
     @PostMapping("/signup")
     public ResponseEntity<?> signUp(@Valid @RequestBody SignUpRequest signUpRequest) {
@@ -57,8 +63,30 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<String> getCurrentUser() {
-        return ResponseEntity.ok("현재 인증된 사용자 정보를 반환합니다.");
+    public ResponseEntity<?> getCurrentUser() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || auth.getName() == null) {
+                return ResponseEntity.status(401).body(Map.of("message", "인증되지 않은 사용자입니다."));
+            }
+
+            String identifier = auth.getName();
+            User user;
+
+            // 이메일인지 사용자명인지 확인하여 사용자 조회
+            if (identifier.contains("@")) {
+                user = userDetailsService.findByEmail(identifier)
+                        .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+            } else {
+                user = userDetailsService.findByUsername(identifier)
+                        .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+            }
+
+            UserInfoResponse userInfo = UserInfoResponse.from(user);
+            return ResponseEntity.ok(userInfo);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("message", "사용자 정보를 조회할 수 없습니다."));
+        }
     }
 
     @PostMapping("/oauth2/complete")

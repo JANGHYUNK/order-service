@@ -101,8 +101,17 @@
             justify-content: center;
             gap: 8px;
         }
+        .btn-naver {
+            background: #03c75a;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
         .btn-google:hover,
-        .btn-kakao:hover {
+        .btn-kakao:hover,
+        .btn-naver:hover {
             transform: translateY(-1px);
             box-shadow: 0 3px 10px rgba(0,0,0,0.15);
         }
@@ -189,13 +198,17 @@
             <span>또는</span>
         </div>
 
-        <a href="/oauth2/authorization/google" class="btn btn-google">
+        <a href="http://localhost:8080/oauth2/authorization/google" class="btn btn-google">
             <span class="social-btn-icon">📧</span>
             <span class="social-btn-text">Google로 로그인</span>
         </a>
-        <a href="/oauth2/authorization/kakao" class="btn btn-kakao">
+        <a href="http://localhost:8080/oauth2/authorization/kakao" class="btn btn-kakao">
             <span class="social-btn-icon">💬</span>
             <span class="social-btn-text">Kakao로 로그인</span>
+        </a>
+        <a href="http://localhost:8080/oauth2/authorization/naver" class="btn btn-naver">
+            <span class="social-btn-icon">🟢</span>
+            <span class="social-btn-text">Naver로 로그인</span>
         </a>
 
         <div class="links">
@@ -218,7 +231,7 @@
             successMessage.style.display = 'none';
 
             try {
-                const response = await fetch('/api/auth/login', {
+                const response = await fetch('http://localhost:8080/api/auth/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -239,9 +252,39 @@
                     successMessage.textContent = '로그인 성공! 리다이렉트 중...';
                     successMessage.style.display = 'block';
 
-                    // 성공 후 홈페이지로 리다이렉트
-                    setTimeout(() => {
-                        window.location.href = '/dashboard.html';
+                    // 사용자 정보를 가져와서 역할에 따라 리다이렉트
+                    setTimeout(async () => {
+                        try {
+                            const userResponse = await fetch('http://localhost:8080/api/auth/me', {
+                                headers: {
+                                    'Authorization': 'Bearer ' + data.accessToken
+                                }
+                            });
+
+                            if (userResponse.ok) {
+                                const userInfo = await userResponse.json();
+
+                                // 역할에 따른 리다이렉트
+                                switch(userInfo.role) {
+                                    case 'ADMIN':
+                                        window.location.href = '/admin/dashboard';
+                                        break;
+                                    case 'SELLER':
+                                        window.location.href = '/seller/dashboard';
+                                        break;
+                                    case 'USER':
+                                    default:
+                                        window.location.href = '/dashboard.html';
+                                        break;
+                                }
+                            } else {
+                                // 사용자 정보를 가져올 수 없는 경우 기본 대쉬보드로
+                                window.location.href = '/dashboard.html';
+                            }
+                        } catch (error) {
+                            console.error('사용자 정보 조회 오류:', error);
+                            window.location.href = '/dashboard.html';
+                        }
                     }, 1000);
                 } else {
                     const errorData = await response.text();
