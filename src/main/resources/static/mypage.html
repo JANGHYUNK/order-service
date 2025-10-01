@@ -482,15 +482,26 @@
                 <form class="settings-form" onsubmit="saveSettings(event)">
                     <div class="form-group">
                         <label class="form-label">이름</label>
-                        <input type="text" id="settingsName" class="form-input" placeholder="이름을 입력하세요">
+                        <input type="text" id="settingsName" class="form-input" placeholder="이름을 입력하세요" disabled>
                     </div>
                     <div class="form-group">
                         <label class="form-label">닉네임</label>
-                        <input type="text" id="settingsNickname" class="form-input" placeholder="닉네임을 입력하세요">
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="text" id="settingsNickname" class="form-input" placeholder="닉네임을 입력하세요" style="flex: 1;">
+                            <button type="button" id="checkNicknameBtn" class="btn btn-primary btn-sm" onclick="checkNickname()">
+                                중복확인
+                            </button>
+                        </div>
+                        <div id="nicknameStatus" style="font-size: 0.85rem; margin-top: 5px; display: none;"></div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">이메일</label>
-                        <input type="email" id="settingsEmail" class="form-input" placeholder="이메일을 입력하세요 (선택사항)">
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="email" id="settingsEmail" class="form-input" placeholder="이메일을 입력하세요 (선택사항)" style="flex: 1;">
+                            <button type="button" id="emailInputVerifyBtn" class="btn btn-primary btn-sm" style="display: none;" onclick="sendVerificationFromInput()">
+                                인증하기
+                            </button>
+                        </div>
                         <small style="color: #666; font-size: 0.85rem; margin-top: 5px; display: block;">
                             이메일 변경 시 인증이 필요합니다
                         </small>
@@ -509,9 +520,17 @@
                         <label class="form-label">이메일 인증 상태</label>
                         <div style="display: flex; gap: 10px; align-items: center;">
                             <span id="settingsVerified" class="badge badge-unverified">미인증</span>
-                            <button type="button" id="emailVerifyBtn" class="btn btn-primary btn-sm" style="display: none;" onclick="sendVerificationEmail()">
-                                이메일 인증하기
+                        </div>
+                    </div>
+                    <div class="form-group" id="emailVerificationGroup" style="display: none;">
+                        <label class="form-label">이메일 인증</label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <button type="button" id="emailVerifyBtn" class="btn btn-primary" onclick="sendVerificationEmail()">
+                                인증번호 발송
                             </button>
+                            <small id="verifyBtnHelp" style="color: #666; font-size: 0.85rem;">
+                                등록된 이메일로 인증번호가 발송됩니다
+                            </small>
                         </div>
                     </div>
                     <div class="form-actions">
@@ -591,21 +610,30 @@
             document.getElementById('settingsUsername').value = userData.username || '-';
             document.getElementById('settingsRole').textContent = userData.role || 'USER';
 
+            // Store original nickname for comparison
+            originalNickname = userData.nickname || '';
+            nicknameChecked = false;
+            document.getElementById('nicknameStatus').style.display = 'none';
+
             const verifiedBadge = document.getElementById('settingsVerified');
-            const verifyBtn = document.getElementById('emailVerifyBtn');
+            const emailVerificationGroup = document.getElementById('emailVerificationGroup');
+            const emailInputVerifyBtn = document.getElementById('emailInputVerifyBtn');
 
             if (userData.emailVerified) {
                 verifiedBadge.textContent = '인증됨';
                 verifiedBadge.className = 'badge badge-verified';
-                verifyBtn.style.display = 'none';
+                emailVerificationGroup.style.display = 'none';
+                emailInputVerifyBtn.style.display = 'none';
             } else {
                 verifiedBadge.textContent = '미인증';
                 verifiedBadge.className = 'badge badge-unverified';
                 // 이메일이 있고 미인증인 경우에만 인증 버튼 표시
                 if (userData.email && userData.email.trim() !== '') {
-                    verifyBtn.style.display = 'inline-block';
+                    emailVerificationGroup.style.display = 'block';
+                    emailInputVerifyBtn.style.display = 'none';
                 } else {
-                    verifyBtn.style.display = 'none';
+                    emailVerificationGroup.style.display = 'none';
+                    emailInputVerifyBtn.style.display = 'inline-block';
                 }
             }
         }
@@ -666,26 +694,87 @@
             document.getElementById(section + '-section').classList.add('active');
         }
 
+        let nicknameChecked = false;
+        let originalNickname = '';
+
+        async function checkNickname() {
+            const nickname = document.getElementById('settingsNickname').value.trim();
+            const status = document.getElementById('nicknameStatus');
+            const btn = document.getElementById('checkNicknameBtn');
+
+            if (!nickname) {
+                status.textContent = '닉네임을 입력해주세요.';
+                status.style.color = '#721c24';
+                status.style.display = 'block';
+                nicknameChecked = false;
+                return;
+            }
+
+            if (nickname.length < 2) {
+                status.textContent = '닉네임은 2자 이상이어야 합니다.';
+                status.style.color = '#721c24';
+                status.style.display = 'block';
+                nicknameChecked = false;
+                return;
+            }
+
+            // 원래 닉네임과 같으면 중복확인 불필요
+            if (nickname === originalNickname) {
+                status.textContent = '현재 사용 중인 닉네임입니다.';
+                status.style.color = '#0c5460';
+                status.style.display = 'block';
+                nicknameChecked = true;
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '확인 중...';
+
+            try {
+                const response = await fetch(`http://localhost:8080/api/auth/check-nickname?nickname=${encodeURIComponent(nickname)}`);
+                const data = await response.json();
+
+                if (data.available) {
+                    status.textContent = '✓ 사용 가능한 닉네임입니다.';
+                    status.style.color = '#155724';
+                    status.style.display = 'block';
+                    nicknameChecked = true;
+                } else {
+                    status.textContent = data.message || '이미 사용 중인 닉네임입니다.';
+                    status.style.color = '#721c24';
+                    status.style.display = 'block';
+                    nicknameChecked = false;
+                }
+            } catch (error) {
+                status.textContent = '확인 중 오류가 발생했습니다.';
+                status.style.color = '#721c24';
+                status.style.display = 'block';
+                nicknameChecked = false;
+            }
+
+            btn.disabled = false;
+            btn.textContent = '중복확인';
+        }
+
         async function saveSettings(event) {
             event.preventDefault();
 
             const token = localStorage.getItem('accessToken');
-            const newName = document.getElementById('settingsName').value.trim();
             const newNickname = document.getElementById('settingsNickname').value.trim();
             const newEmail = document.getElementById('settingsEmail').value.trim();
-
-            if (!newName) {
-                alert('이름을 입력해주세요.');
-                return;
-            }
 
             if (!newNickname) {
                 alert('닉네임을 입력해주세요.');
                 return;
             }
 
+            // 닉네임이 변경되었는지 확인
+            if (newNickname !== originalNickname && !nicknameChecked) {
+                alert('닉네임 중복확인을 해주세요.');
+                return;
+            }
+
             const updateData = {
-                name: newName,
                 nickname: newNickname
             };
 
@@ -706,6 +795,8 @@
 
                 if (response.ok) {
                     userData = await response.json();
+                    originalNickname = userData.nickname;
+                    nicknameChecked = false;
                     displayUserData();
                     alert('계정 정보가 업데이트되었습니다.');
 
@@ -732,6 +823,11 @@
                 return;
             }
 
+            const verifyBtn = document.getElementById('emailVerifyBtn');
+            const originalText = verifyBtn.textContent;
+            verifyBtn.disabled = true;
+            verifyBtn.textContent = '발송 중...';
+
             try {
                 const response = await fetch('http://localhost:8080/api/auth/send-verification-code', {
                     method: 'POST',
@@ -742,16 +838,22 @@
                     body: JSON.stringify({ email: email })
                 });
 
+                verifyBtn.disabled = false;
+                verifyBtn.textContent = originalText;
+
                 if (response.ok) {
+                    alert('인증번호가 이메일로 발송되었습니다. 이메일을 확인해주세요.');
                     const code = prompt('이메일로 전송된 6자리 인증번호를 입력해주세요:');
-                    if (code) {
-                        await verifyEmailCode(email, code);
+                    if (code && code.trim() !== '') {
+                        await verifyEmailCode(email, code.trim());
                     }
                 } else {
                     const data = await response.json();
                     alert('인증 이메일 전송 실패: ' + (data.message || '오류가 발생했습니다.'));
                 }
             } catch (error) {
+                verifyBtn.disabled = false;
+                verifyBtn.textContent = originalText;
                 console.error('인증 이메일 전송 실패:', error);
                 alert('인증 이메일 전송 중 오류가 발생했습니다.');
             }
@@ -775,6 +877,85 @@
                 if (data.verified) {
                     alert('이메일 인증이 완료되었습니다!');
                     await loadUserData(); // 사용자 정보 새로고침
+                } else {
+                    alert('인증 실패: ' + (data.message || '잘못된 인증번호입니다.'));
+                }
+            } catch (error) {
+                console.error('인증 코드 확인 실패:', error);
+                alert('인증 코드 확인 중 오류가 발생했습니다.');
+            }
+        }
+
+        async function sendVerificationFromInput() {
+            const token = localStorage.getItem('accessToken');
+            const emailInput = document.getElementById('settingsEmail');
+            const email = emailInput.value.trim();
+
+            if (!email) {
+                alert('이메일을 입력해주세요.');
+                return;
+            }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                alert('올바른 이메일 형식을 입력해주세요.');
+                return;
+            }
+
+            const emailInputVerifyBtn = document.getElementById('emailInputVerifyBtn');
+            const originalText = emailInputVerifyBtn.textContent;
+            emailInputVerifyBtn.disabled = true;
+            emailInputVerifyBtn.textContent = '발송 중...';
+
+            try {
+                const response = await fetch('http://localhost:8080/api/auth/send-verification-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+
+                emailInputVerifyBtn.disabled = false;
+                emailInputVerifyBtn.textContent = originalText;
+
+                if (response.ok) {
+                    alert('인증번호가 이메일로 발송되었습니다. 이메일을 확인해주세요.');
+                    const code = prompt('이메일로 전송된 6자리 인증번호를 입력해주세요:');
+                    if (code && code.trim() !== '') {
+                        await verifyEmailCodeFromInput(email, code.trim());
+                    }
+                } else {
+                    const data = await response.json();
+                    alert('인증 이메일 전송 실패: ' + (data.message || '오류가 발생했습니다.'));
+                }
+            } catch (error) {
+                emailInputVerifyBtn.disabled = false;
+                emailInputVerifyBtn.textContent = originalText;
+                console.error('인증 이메일 전송 실패:', error);
+                alert('인증 이메일 전송 중 오류가 발생했습니다.');
+            }
+        }
+
+        async function verifyEmailCodeFromInput(email, code) {
+            const token = localStorage.getItem('accessToken');
+
+            try {
+                const response = await fetch('http://localhost:8080/api/auth/verify-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ email: email, code: code })
+                });
+
+                const data = await response.json();
+
+                if (data.verified) {
+                    alert('이메일 인증이 완료되었습니다! 이제 이메일을 저장하기 버튼을 눌러주세요.');
+                    // 인증이 완료되면 이메일 입력창과 버튼을 비활성화하지 않음 (사용자가 저장 버튼을 눌러야 함)
                 } else {
                     alert('인증 실패: ' + (data.message || '잘못된 인증번호입니다.'));
                 }

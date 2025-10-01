@@ -840,8 +840,13 @@
                     successMessage.textContent = data.message || '회원가입이 완료되었습니다!';
                     successMessage.style.display = 'block';
 
+                    // 역할에 따라 리다이렉트
                     setTimeout(() => {
-                        window.location.href = '/dashboard.html';
+                        if (selectedRole === 'ADMIN' || selectedRole === 'SELLER') {
+                            window.location.href = '/dashboard.html';
+                        } else {
+                            window.location.href = '/';
+                        }
                     }, 1500);
                 } else {
                     try {
